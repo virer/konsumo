@@ -1,0 +1,7 @@
+Dockerfile
+.dockerignore
+README.md
+app/static/examples/*
+app/static/examples
+.git
+.gitignore
