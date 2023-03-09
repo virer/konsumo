@@ -46,7 +46,8 @@ def set_response_headers(response):
 # Flask-Login helper to retrieve a user from our db
 @login_manager.user_loader
 def load_user(user_id):
-    return User.get(user_id)
+    user = User()
+    return user.get(user_id)
 
 @app.route("/konsumo/profile")
 def profile():
@@ -129,12 +130,9 @@ def callback():
         id_=unique_id, name=users_name, email=users_email, profile_pic=picture
     )
 
-    print(unique_id)
-    print(users_email)
-
     # Doesn't exist? Add it to the database.
-    if not User.get(unique_id):
-        User.create(unique_id, users_name, users_email, picture)
+    if not user.get(unique_id):
+        user.create(unique_id, users_name, users_email, picture)
 
     # Begin user session by logging the user in
     login_user(user)
@@ -194,19 +192,7 @@ def root():
     return redirect("/konsumo", code=302)
 
 if __name__ == "__main__":
-    # FIXME
-    from db import init_db_command
-    # Naive database setup <================ FIXME TODO
-    try:
-        init_db_command()
-    except sqlite3.OperationalError:
-        # Assume it's already been created
-        pass
-    except Exception as e:
-        print(e)
-    # FIXME
-
-    # SSL
-    # app.run(host=HOST, port=int(PORT), ssl_context="adhoc", debug=DEBUG)
-    app.run(host=HOST, port=int(PORT), debug=DEBUG)
-
+    # SSL Mode
+    app.run(host=HOST, port=int(PORT), ssl_context="adhoc", debug=DEBUG)
+    # No SSL (usage with gunicorn)
+    # app.run(host=HOST, port=int(PORT), debug=DEBUG)
