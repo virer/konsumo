@@ -19,6 +19,4 @@ podman run --rm \
     -e DBNAME="konsumo" \
     localhost/konsumo:latest $1
 
-    
-
 # EOF

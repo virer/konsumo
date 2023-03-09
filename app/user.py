@@ -23,17 +23,17 @@ def get_db():
 
 class User(UserMixin):
     
-    def __init__(self, id_=None, name=None, email=None, profile_pic=None):
+    def __init__(self, id_=None, name=None, email=None, profile_pic=None, location=""):
         self.id = id_
         self.name = name
         self.email = email
         self.profile_pic = profile_pic
+        self.location = location
         self.conn = get_db()
         self.db = self.conn.cursor()
 
     def get(self, user_id):
-        sql = "SELECT * FROM user WHERE id = {}".format(user_id)
-        self.db.execute( sql )
+        self.db.execute( f"SELECT user_id, name, email, profile_pic, location FROM user WHERE user_id = %d", (user_id, ) )
 
         try:
             user = self.db.fetchall()
@@ -42,16 +42,21 @@ class User(UserMixin):
             return False
         
         user = User(
-            id_=user[0], name=user[1], email=user[2], profile_pic=user[3]
+            id_=user[0], name=user[1], email=user[2], profile_pic=user[3], location=user[4]
         )
-        self.conn.close()
+        # self.conn.close()
         return user
 
     def create(self, id_, name, email, profile_pic):
         self.db.execute(
-            "INSERT INTO user (id, name, email, profile_pic) "
-            "VALUES (?, ?, ?, ?)",
-            (id_, name, email, profile_pic),
+            f"INSERT INTO user (user_id, name, email, profile_pic) "
+             "VALUES (?, ?, ?, ?)",
+             (id_, name, email, profile_pic),
         )
+        self.conn.commit()
+        self.conn.close()
+    
+    def set_location(self, user_id, location):
+        self.db.execute( f"UPDATE user set location = %s WHERE user_id = %d", (location, user_id) )
         self.conn.commit()
         self.conn.close()

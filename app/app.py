@@ -51,14 +51,16 @@ def load_user(user_id):
 
 @app.route("/konsumo/profile")
 def profile():
-    if current_user.is_authenticated:
+    if current_user and current_user.is_authenticated:
+        print(dir(current_user))
         return (
             "<p>Hello, {}! You're logged in! Email: {}</p>"
             "<div><p>Google Profile Picture:</p>"
             '<img src="{}" alt="Google profile pic"></img></div>'
+            'Location: {}<br><br>'
             '<a class="button" href="/konsumo">content</a><br><br>'
             '<a class="button" href="/konsumo/logout">Logout</a>'.format(
-                current_user.name, current_user.email, current_user.profile_pic
+                current_user.name, current_user.email, current_user.profile_pic, current_user.location
             )
         )
     else:
@@ -129,6 +131,8 @@ def callback():
     user = User(
         id_=unique_id, name=users_name, email=users_email, profile_pic=picture
     )
+    if DEBUG:
+        print("UserId {} logged in".format(unique_id))
 
     # Doesn't exist? Add it to the database.
     if not user.get(unique_id):
@@ -141,9 +145,11 @@ def callback():
     return redirect(url_for("profile"))
 
 @app.route("/konsumo/logout")
-@login_required
 def logout():
-    logout_user()
+    try:
+        logout_user()
+    except:
+        pass
     return redirect(url_for("profile"))
 
 def construct_data(chartid):
@@ -165,11 +171,9 @@ def construct_data(chartid):
         title="Previous year consumption"
         xaxis = ["Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar","Apr","May","Jun","Jul"]
 
-    
-    # "type: 'datetime'"
-
     return title, json.dumps(series), json.dumps(xaxis)
 
+@login_required
 @app.route('/konsumo/chart/<prefix>', methods=['GET'])
 def chart(prefix):
     title, series, xaxis = construct_data(prefix)
@@ -180,6 +184,16 @@ def chart(prefix):
                     series=copy.copy(series),
                     xaxis=copy.copy(xaxis),
                     )
+
+@login_required
+@app.route('/konsumo/location', methods=['GET','POST'])
+def location():
+    if request.method=='POST':
+        location = request.form['location']
+        user = User()
+        user.set_location(current_user.id, location)
+        return redirect(url_for('location'))
+    return render_template('location.html')
 
 @app.route('/konsumo/', methods=['GET'])
 @app.route('/konsumo', methods=['GET'])
@@ -192,7 +206,12 @@ def root():
     return redirect("/konsumo", code=302)
 
 if __name__ == "__main__":
+    if DEBUG:
+        user = User()
+        print(user.get("117426397869268208059"))
+    
     # SSL Mode
     app.run(host=HOST, port=int(PORT), ssl_context="adhoc", debug=DEBUG)
     # No SSL (usage with gunicorn)
     # app.run(host=HOST, port=int(PORT), debug=DEBUG)
+
