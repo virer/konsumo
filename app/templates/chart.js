@@ -31,7 +31,7 @@ var {{ prefix }}_options = {
     }
   },
   xaxis: {
-    categories: {{ xaxis }},
+    type: "datetime"
   },
   tooltip: {
     y: [

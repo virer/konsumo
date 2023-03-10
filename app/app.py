@@ -8,12 +8,13 @@
 DEBUG = True
 
 from flask import Flask, render_template, redirect, url_for, request, jsonify, copy_current_request_context, abort, send_from_directory
+from flask_login import LoginManager, current_user, login_required, login_user, logout_user, UserMixin
+from flask_sqlalchemy import SQLAlchemy
 from jinja2 import TemplateNotFound
-from flask_login import LoginManager, current_user, login_required, login_user, logout_user 
 from oauthlib.oauth2 import WebApplicationClient
-import os, copy, json, requests
-from datetime import datetime, timedelta
-from user import User
+from datetime import datetime, date, timedelta
+import os, copy, json, requests, sqlalchemy
+import pandas as pd
 
 app = Flask(__name__, static_url_path='/konsumo/static')
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
@@ -25,6 +26,104 @@ PORT = os.getenv("PORT", "8080")
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", None)
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", None)
 GOOGLE_DISCOVERY_URL = ("https://accounts.google.com/.well-known/openid-configuration")
+
+db = SQLAlchemy()
+app.config["SQLALCHEMY_DATABASE_URI"] = 'mysql+pymysql://{}:{}@{}/{}'.format(
+    os.getenv('DBUSER', 'root'),
+    os.getenv('DBPASS', 'password'),
+    os.getenv('DBHOST', '127.0.0.1'),
+    os.getenv('DBNAME', 'konsumo')
+    )
+db.init_app(app)
+
+def json_serial(obj):
+    """JSON serializer for objects not serializable by default json code"""
+
+    if isinstance(obj, (datetime, date)):
+        return obj.isoformat()
+    raise TypeError ("Type %s not serializable" % type(obj))
+class UsrDB(db.Model):
+    __tablename__ = "user"
+    user_id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String)
+    email = db.Column(db.String)
+    profile_pic = db.Column(db.String)
+    location = db.Column(db.String)
+
+
+class DataDB(db.Model):
+    __tablename__ = "user_data"
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.Date)
+    type = db.Column(db.String)
+    value1 = db.Column(db.Integer)
+    value2 = db.Column(db.Integer)
+    user_id = db.Column(db.Integer)
+
+class User(UserMixin):
+    
+    def __init__(self, id_=None, name=None, email=None, profile_pic=None, location=""):
+        self.id = id_
+        self.name = name
+        self.email = email
+        self.profile_pic = profile_pic
+        self.location = location
+
+    def get(self, user_id):
+        sql = sqlalchemy.select(
+                    UsrDB.user_id,UsrDB.name,UsrDB.email,UsrDB.profile_pic,UsrDB.location
+                ).where(UsrDB.user_id == user_id)
+        
+        try:
+            row = db.session.execute( sql ) 
+            user = list(row.fetchall())[0]
+        except Exception as e:
+            if DEBUG:
+                print(e)
+            return False
+        
+        user = User(
+            id_=user[0], name=user[1], email=user[2], profile_pic=user[3], location=user[4]
+        )
+        return user
+
+    def create(self, id_, name, email, profile_pic):
+        db.session.execute(
+            f"INSERT INTO user (user_id, name, email, profile_pic) "
+             "VALUES (?, ?, ?, ?)",
+             (id_, name, email, profile_pic),
+        )
+        db.session.commit()
+        db.session.close()
+    
+    def set_location(self, user_id, location):
+        db.session.execute( f"UPDATE user set location = %s WHERE user_id = %d", (location, user_id) )
+        db.session.commit()
+        db.session.close()
+
+    def set_data(self, date, type, value1, value2, user_id):
+        if len(value2) > 0 :
+            db.session.execute( f"INSERT INTO user_data (date, type, value1, value2, user_id) VALUES (?, ?, ?, ?, ?)", (date, type, value1, value2, user_id, ) )
+        db.session.execute( f"INSERT INTO user_data (date, type, value1, user_id) VALUES (?, ?, ?, ?)", (date, type, value1, user_id, ) )
+        db.session.commit()
+        db.session.close()
+    
+    def get_data1(self, user_id, type):
+        sql = sqlalchemy.select(
+                    DataDB.date, DataDB.value1
+                ).order_by(DataDB.date).where(DataDB.type == type).where(DataDB.user_id == user_id)
+        
+        try:
+            rows = db.session.execute( sql )
+            return rows.fetchall()
+        except Exception as e:
+            if DEBUG:
+                print(e)
+            return False
+
+    def db_close(self):
+        db.session.close()
+
 
 def get_google_provider_cfg():
     return requests.get(GOOGLE_DISCOVERY_URL).json()
@@ -136,16 +235,46 @@ def logout():
         pass
     return redirect(url_for("profile"))
 
-def construct_data(chartid):
+def deltadays(dat1, dat2):
+    date_format = "%Y-%m-%d"
+    a = datetime.strptime(dat1, date_format)
+    b = datetime.strptime(dat2, date_format)
+    delta = b - a
+    return int(delta.days)
+
+last_value = 0
+def diff_m(v):
+        global last_value
+        ret = v - last_value
+        last_value = v
+        return ret
+
+def construct_data():
+    global last_value
+    # get data here
+    user = User()
+    data = user.get_data1(current_user.id, 'electricity')
+    
+    last_value = list(data)[0][1]
+
+    return [(k, diff_m(v)) for k,v in data ]
+
+def present_data(chartid):
     heating_period={ "start":"09", "end":"05" }
 
+    data = construct_data()
+
+    # transform here
+    if DEBUG:
+        print("DATA:**")
+        print(data)
+
     if chartid == "current":
-        series = [
-            { "name":"daily avg", "data": [  0,  0,  2,  3,  6, 16, 17, 15,  10,  9,  0, 0, 30, 25, 16, 12,  8,  0,  2,  1,   3, 7, 17, 25 ] },
-            { "name":"avg t°", "data":    [ 30, 25, 16, 12,  8,  0,  2,  1,   3, 7, 17, 25, 0,  0,  2,  3,  6, 16, 17, 15,  10,  9,  0, 0 ] }
-            ]
-        title="Current year"
-        xaxis = ["Aug","","Sep","","Oct","","Nov","","Dec","","Jan","","Feb","","Mar","","Apr","","May","","Jun","","Jul",""]
+        fields = ['x', 'y']
+        dicts  = [dict(zip(fields, d)) for d in data]
+        series = [{ "name":"daily avg", "data": dicts }]
+        title  = "Current year"
+        xaxis  = "" #["Aug","","Sep","","Oct","","Nov","","Dec","","Jan","","Feb","","Mar","","Apr","","May","","Jun","","Jul",""]
     elif chartid == "global":
         series = [
             { "name":"2022-2023", "data": [ 0,  0, 100, 240, 330, 426, 421, 410, 180,  90,  0, 0 ] },
@@ -155,12 +284,12 @@ def construct_data(chartid):
         title="Previous year consumption"
         xaxis = ["Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar","Apr","May","Jun","Jul"]
 
-    return title, json.dumps(series), json.dumps(xaxis)
+    return title, json.dumps(series, default=json_serial), json.dumps(xaxis)
 
 @login_required
 @app.route('/konsumo/chart/<prefix>', methods=['GET'])
 def chart(prefix):
-    title, series, xaxis = construct_data(prefix)
+    title, series, xaxis = present_data(prefix)
 
     return render_template("chart.js", 
                     prefix=copy.copy(prefix), 
@@ -211,13 +340,7 @@ def root():
     return redirect("/konsumo", code=302)
 
 if __name__ == "__main__":
-    if DEBUG:
-        user = User()
-        print(user.get("117426397869268208059"))
-        user.db_close()
-    
     # SSL Mode
     app.run(host=HOST, port=int(PORT), ssl_context="adhoc", debug=DEBUG)
     # No SSL (usage with gunicorn)
     # app.run(host=HOST, port=int(PORT), debug=DEBUG)
-

@@ -6,4 +6,8 @@ pyOpenSSL==23.0.0
 Flask-Login==0.6.2
 jinja2==3.1.2
 Werkzeug==2.2.3
-mariadb
+mysql-connector-python
+PyMySQL==1.0.2
+pandas==1.5.3
+flask-sqlalchemy==3.0.3
+SQLAlchemy==2.0.5
