@@ -1,4 +1,25 @@
+{% extends "base.html" %}
+{% block title %} Konsumo :: a home energy consumption chart {% endblock %}
+{% block head %}
+<meta http-equiv="refresh" content="300">
+<link rel="icon" href="data:;base64,iVBORw0KGgo=">
+<style>
+
+  .konsumo_chart {
+  max-width: 650px;
+  margin: 35px auto;
+}
+  
+</style>
+{% endblock %}
+{% block content %}
+
+
+{% if current_user.is_authenticated %}
 <form action="/konsumo/location" method="POST">
-<input type="text" name="location" value="{{ current_user.location }}">
-<input type="submit" value="Save">
-</form>
+    <input type="text" name="location" value="{{ current_user.location }}">
+    <input type="submit" value="Save">
+    </form>
+{% endif %}
+
+{% endblock %}

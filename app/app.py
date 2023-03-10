@@ -11,7 +11,8 @@ from flask import Flask, render_template, redirect, url_for, request, jsonify, c
 from jinja2 import TemplateNotFound
 from flask_login import LoginManager, current_user, login_required, login_user, logout_user 
 from oauthlib.oauth2 import WebApplicationClient
-import os, copy, json, requests, sqlite3
+import os, copy, json, requests
+from datetime import datetime, timedelta
 from user import User
 
 app = Flask(__name__, static_url_path='/konsumo/static')
@@ -48,23 +49,6 @@ def set_response_headers(response):
 def load_user(user_id):
     user = User()
     return user.get(user_id)
-
-@app.route("/konsumo/profile")
-def profile():
-    if current_user and current_user.is_authenticated:
-        print(dir(current_user))
-        return (
-            "<p>Hello, {}! You're logged in! Email: {}</p>"
-            "<div><p>Google Profile Picture:</p>"
-            '<img src="{}" alt="Google profile pic"></img></div>'
-            'Location: {}<br><br>'
-            '<a class="button" href="/konsumo">content</a><br><br>'
-            '<a class="button" href="/konsumo/logout">Logout</a>'.format(
-                current_user.name, current_user.email, current_user.profile_pic, current_user.location
-            )
-        )
-    else:
-        return '<a class="button" href="/konsumo/login">Google Login</a>'
 
 @app.route("/konsumo/login")
 def login():
@@ -185,6 +169,10 @@ def chart(prefix):
                     xaxis=copy.copy(xaxis),
                     )
 
+@app.route("/konsumo/profile")
+def profile():
+    return render_template('profile.html')
+
 @login_required
 @app.route('/konsumo/location', methods=['GET','POST'])
 def location():
@@ -194,6 +182,23 @@ def location():
         user.set_location(current_user.id, location)
         return redirect(url_for('location'))
     return render_template('location.html')
+
+@login_required
+@app.route('/konsumo/form', methods=['GET','POST'])
+def form():
+    if request.method=='POST':
+        date   = request.form['date']
+        type   = request.form['type']
+        value1 = request.form['value1']
+        value2 = request.form['value2']+"" # ALLOWED NULL VALUE HERE
+
+        # Convert date from DD-MM-YYYY to YYYY-MM-DD
+        # date = datetime.strptime(date,'%d-%m-%Y').strftime('%Y-%m-%d')
+
+        user = User()
+        user.set_data(date, type, value1, value2, current_user.id)
+        return redirect(url_for('form'))
+    return render_template('form.html')
 
 @app.route('/konsumo/', methods=['GET'])
 @app.route('/konsumo', methods=['GET'])
@@ -209,6 +214,7 @@ if __name__ == "__main__":
     if DEBUG:
         user = User()
         print(user.get("117426397869268208059"))
+        user.db_close()
     
     # SSL Mode
     app.run(host=HOST, port=int(PORT), ssl_context="adhoc", debug=DEBUG)

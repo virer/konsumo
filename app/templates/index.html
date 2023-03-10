@@ -14,13 +14,6 @@
 {% endblock %}
 {% block content %}
 
-<center>
-  <h1>{% if current_user.is_authenticated %}Hi {{ current_user.name }} ! {% else %} Welcome to Konsumo !{% endif %}</h1>
-</center>
-
-  {% include 'menu.html' %}
-
-
 {% if current_user.is_authenticated %}
 {% for prefix in prefixes %}
   <div id="{{ prefix }}_chart" class="konsumo_chart chart-box"></div>

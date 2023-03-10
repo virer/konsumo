@@ -60,3 +60,13 @@ class User(UserMixin):
         self.db.execute( f"UPDATE user set location = %s WHERE user_id = %d", (location, user_id) )
         self.conn.commit()
         self.conn.close()
+
+    def set_data(self, date, type, value1, value2, user_id):
+        if len(value2) > 0 :
+            self.db.execute( f"INSERT INTO user_data (date, type, value1, value2, user_id) VALUES (?, ?, ?, ?, ?)", (date, type, value1, value2, user_id, ) )
+        self.db.execute( f"INSERT INTO user_data (date, type, value1, user_id) VALUES (?, ?, ?, ?)", (date, type, value1, user_id, ) )
+        self.conn.commit()
+        self.conn.close()
+
+    def db_close(self):
+        self.conn.close()

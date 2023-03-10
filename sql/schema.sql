@@ -12,9 +12,9 @@ CREATE TABLE user (
 CREATE TABLE user_data (
   id INT AUTO_INCREMENT PRIMARY KEY,
   date DATE NOT NULL,
-  type ENUM('gazoline', 'water', 'electricy', 'other'),
+  type ENUM('gazoline', 'water', 'electricity', 'other'),
   value1 MEDIUMINT NOT NULL,
-  value2 MEDIUMINT NOT NULL,
+  value2 MEDIUMINT NULL,
   user_id VARCHAR(255),
   CONSTRAINT FK_user_id FOREIGN KEY (user_id) REFERENCES user(user_id)
 );
