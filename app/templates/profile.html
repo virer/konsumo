@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %} Konsumo :: a home energy consumption chart {% endblock %}
+{% block head %}
+<meta http-equiv="refresh" content="300">
+<link rel="icon" href="data:;base64,iVBORw0KGgo=">
+<style>
+
+  .konsumo_chart {
+  max-width: 650px;
+  margin: 35px auto;
+}
+  
+</style>
+{% endblock %}
+{% block content %}
+
+
+{% if current_user.is_authenticated %}
+  <div>
+    <p>Hello {{ current_user.name }}, you're logged in! <img class="imgprofile" src="{{ current_user.profile_pic }}" alt="Google profile pic"></img></p>
+  </div>
+{% else %}
+  <center><a class="button" href="/konsumo/login">Google Login</a></center>
+{% endif %}
+
+{% endblock %}

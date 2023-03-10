@@ -1,0 +1,10 @@
+.imgprofile {
+    width: 75px;
+    height: auto;
+    max-width: 100%;
+    border-radius:50%;
+    padding:15px;
+    margin:-15px;
+    vertical-align:middle;
+    position:relative;/*to send on top */
+  }
