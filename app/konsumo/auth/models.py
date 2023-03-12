@@ -1,6 +1,4 @@
-from flask import g, current_app
 from flask_login import UserMixin
-from flask_sqlalchemy import SQLAlchemy
 from konsumo import db
 import enum
 
@@ -20,7 +18,8 @@ class User(db.Model, UserMixin):
         self.profile_pic = profile_pic
         self.location = location
 
-    def get(self, user_id):
+    @staticmethod
+    def get(user_id):
         sql = db.select(
                     User.user_id,User.name,User.email,User.profile_pic,User.location
                 ).where(User.user_id == user_id)
@@ -38,28 +37,32 @@ class User(db.Model, UserMixin):
         )
         return user
 
-    def create(self,user_id, name, email, profile_pic):
+    @staticmethod
+    def create(user_id, name, email, profile_pic):
         sql = db.insert(User).values(user_id=user_id, name=name, email=email, profile_pic=profile_pic)
         db.session.execute(sql)
         db.session.commit()
         db.session.close()
     
-    def set_location(self, user_id, location):
+    @staticmethod
+    def set_location(user_id, location):
         sql = db.update(User).where(user_id == user_id).values(location=location)
         db.session.execute(sql)
         db.session.commit()
         db.session.close()
 
-    def set_data(self, date, type, value1, value2, user_id):
+    @staticmethod
+    def set_data(date, type, value1, value2, user_id):
         if len(value2) > 0 :
-            sql = db.insert(User).values(date=date, type=type, value1=value1, value2=value2, user_id=user_id)
+            sql = db.insert(User_Data).values(date=date, type=type, value1=value1, value2=value2, user_id=user_id)
         else :
-            sql = db.insert(User).values(date=date, type=type, value1=value1, user_id=user_id)
+            sql = db.insert(User_Data).values(date=date, type=type, value1=value1, user_id=user_id)
         db.session.execute(sql)
         db.session.commit()
         db.session.close()
     
-    def get_data(self, user_id, type, value2=False):
+    @staticmethod
+    def get_data(user_id, type, value2=False):
         if value2:
             sql = db.select(
                     User_Data.date, User_Data.value1, User_Data.value2
@@ -77,7 +80,8 @@ class User(db.Model, UserMixin):
                 print(e)
             return False
 
-    def db_close(self):
+    @staticmethod
+    def db_close():
         db.session.close()
 
 class TypeEnum(enum.Enum):

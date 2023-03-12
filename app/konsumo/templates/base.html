@@ -10,23 +10,32 @@
     <link rel="stylesheet" href="/konsumo/static/css/bootstrap.min.css" />
     <link rel="stylesheet" href="/konsumo/static/css/konsumo.css" />
     <script src="/konsumo/static/js/apexcharts.js"></script>
+    <script src="/konsumo/static/js/popper.min.js"></script>
     <script src="/konsumo/static/js/bootstrap.min.js"></script>
     <title>{% block title %}{% endblock %}</title>
 </head>
 <body>
+    {% include 'menu.html' %}
     <main class="container text-center">
     <div id="content">
-        <center>
-            <h1>{% if current_user.is_authenticated %} KonsumO <img class="imgprofile" src="{{ current_user.profile_pic }}" alt="Google profile pic"></img>{% else %} Welcome to Konsumo !{% endif %}</h1>
-        </center>
-        <br><br><br>
+        <center><h1>Welcome to Konsumo !</h1></center>
+        
+        <br>
+
+        {% if notif_msg is defined and notif_msg == True %}
+        <div class="col-sm-12 position-absolute">
+          <div class="position-absolute top-0 end-50">
+            <div class="alert fade alert-simple alert-success alert-dismissible text-left rendered show">
+              <button type="button" class="btn-close" aria-label="Close" data-bs-dismiss="alert"></button>
+              Information <strong>successfully</strong> saved !.
+            </div>
+          </div>  
+        </div>
+        {% endif %}        
         <div class="row">    
-            <div class="col-4">
-                {% include 'menu.html' %}
-            </div>
-            <div class="col-8">
+            <!-- div class="col-10" -->
                 {% block content %}{% endblock %}
-            </div>
+            <!-- /div -->
         </div>
     </main>
     </div>

@@ -17,10 +17,10 @@
 
 {% if current_user.is_authenticated %}
   <div>
-    <p>Hello {{ current_user.name }}, you're logged in! <img class="imgprofile" src="{{ current_user.profile_pic }}" alt="Google profile pic"></img></p>
+    <p>Hello {{ current_user.name }}, you're logged in!</p>
   </div>
 {% else %}
-  <center><a class="button" href="/konsumo/login">Google Login</a></center>
+  <center><a class="button" href="/konsumo/auth/login">Google Login</a></center>
 {% endif %}
 
 {% endblock %}

@@ -13,5 +13,3 @@ SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://{}:{}@{}/{}'.format(
     os.environ.get('DBHOST', '127.0.0.1'),
     os.environ.get('DBNAME', 'konsumo')
 )
-
-    

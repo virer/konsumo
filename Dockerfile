@@ -20,7 +20,4 @@ COPY . /
 USER myapp
 WORKDIR /app
 
-# DEV MODE :
-CMD [ "python", "konsumo.py" ]
-# PROD MODE: but it require an SSL endpoint in front
-# CMD [ "gunicorn", "--config", "gunicorn.conf.py", "konsumo:app" ]
+CMD [ "gunicorn", "--config", "gunicorn.conf.py", "app:app" ]

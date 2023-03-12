@@ -1,12 +1,10 @@
-from flask_login import LoginManager, current_user, login_required, login_user, logout_user
-from oauthlib.oauth2 import WebApplicationClient
-from flask import Blueprint, redirect, url_for, request
+from flask_login import login_user, logout_user
+from flask import Blueprint, redirect, request
 from flask import current_app as app 
 import requests, json
 bp = Blueprint("auth", __name__, url_prefix="/konsumo/auth")
-from .models import User, User_Data
-from konsumo import client, db, login_manager
-DEBUG=True
+from .models import User
+from konsumo import client, login_manager
 
 def get_google_provider_cfg():
     return requests.get(app.config['GOOGLE_DISCOVERY_URL']).json()
@@ -21,8 +19,7 @@ def set_response_headers(response):
 # Flask-Login helper to retrieve a user from our db
 @login_manager.user_loader
 def load_user(user_id):
-    user = User()
-    return user.get(user_id)
+    return User().get(user_id)
 
 @bp.route("/login")
 def login():
@@ -88,8 +85,7 @@ def callback():
     user = User(
         id_=unique_id, name=users_name, email=users_email, profile_pic=picture
     )
-    if DEBUG:
-        print("UserId {} logged in".format(unique_id))
+    print("UserId {} logged in".format(unique_id))
 
     # Doesn't exist? Add it to the database.
     if not user.get(unique_id):
