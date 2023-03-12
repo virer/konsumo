@@ -9,9 +9,10 @@ auth = HTTPBasicAuth()
 @auth.verify_password
 def verify_password(username, password):
     try:
-        location, access_key, secret_key = User.get_info(username)
-        if password == secret_key:
-            return username
+        if username.isdigit():
+            location, access_key, secret_key = User.get_info(username)
+            if password == secret_key:
+                return username
     except:
         pass
     return False
@@ -37,7 +38,6 @@ def api_add_one(type):
     User.set_data(date, type, value1, value2, auth.current_user())
 
     return jsonify(
-                message=f"Data Saved",
-                category="success",
-                status=200
+                message="Data Saved",
+                status="success",
             )

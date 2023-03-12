@@ -8,12 +8,7 @@ EXPOSE 8080
 
 COPY requirements.txt /
 
-RUN apt-get update && apt-get install -y gcc python3-dev && pip install --no-cache-dir -r /requirements.txt
-
-# RUN apk add --no-cache mariadb-connector-c-dev
-# RUN apk add --no-cache --virtual .build-deps build-base gcc musl-dev \
-#     && pip install --no-cache-dir -r /requirements.txt \
-#     && apk del .build-deps build-base gcc musl-dev
+RUN pip install --no-cache-dir -r /requirements.txt
 
 COPY . /
 

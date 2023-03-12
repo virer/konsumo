@@ -6,10 +6,8 @@ pyOpenSSL==23.0.0
 Flask-Login==0.6.2
 jinja2==3.1.2
 Werkzeug==2.2.3
-flask_httpauth
-
+flask_httpauth==4.7.0
 PyMySQL==1.0.2
 flask-sqlalchemy==3.0.3
 SQLAlchemy==2.0.5
 pandas==1.5.3
-mysql-connector-python
