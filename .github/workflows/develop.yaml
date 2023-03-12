@@ -68,7 +68,7 @@ jobs:
       - name: "[GitOps] Update image tag"
         run: |
           echo "Bump to version ${{ needs.Build.outputs.VERSION }} for ${{ github.event.repository.name }} in ${{ needs.Build.outputs.ENVIRONMENT }} environment"
-          sed -i "s#/${{ github.event.repository.name }}:.*\$#/${{ github.event.repository.name }}:${{ needs.Build.outputs.VERSION }}#g" k8s/overlays-necs/${{ needs.Build.outputs.ENVIRONMENT }}/deployment.yaml
+          sed -i "s#/${{ github.event.repository.name }}:.*\$#/${{ github.event.repository.name }}:${{ needs.Build.outputs.VERSION }}#g" k8s/overlays/${{ needs.Build.outputs.ENVIRONMENT }}/deployment.yaml
       - name: "[GitOps] Commit and push the modification"
         run: |
           git config user.email "cicd@virer.net"
