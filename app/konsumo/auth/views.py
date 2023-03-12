@@ -2,10 +2,10 @@ from flask_login import LoginManager, current_user, login_required, login_user, 
 from oauthlib.oauth2 import WebApplicationClient
 from flask import Blueprint, redirect, url_for, request
 from flask import current_app as app 
-import requests
+import requests, json
 bp = Blueprint("auth", __name__, url_prefix="/konsumo/auth")
 from .models import User, User_Data
-from konsumo import db, login_manager
+from konsumo import client, db, login_manager
 DEBUG=True
 
 def get_google_provider_cfg():
@@ -24,7 +24,7 @@ def load_user(user_id):
     user = User()
     return user.get(user_id)
 
-@bp.route("/konsumo/login")
+@bp.route("/login")
 def login():
     # Find out what URL to hit for Google login
     google_provider_cfg = get_google_provider_cfg()
@@ -39,7 +39,7 @@ def login():
     )
     return redirect(request_uri)
 
-@bp.route("/konsumo/login/callback")
+@bp.route("/login/callback")
 def callback():
     # Get authorization code Google sent back to you
     code = request.args.get("code")
@@ -99,12 +99,13 @@ def callback():
     login_user(user)
 
     # Send user back to homepage
-    return redirect(url_for("profile"))
+    return redirect("/konsumo/profile")
 
-@bp.route("/konsumo/logout")
+@bp.route("/logout")
 def logout():
     try:
         logout_user()
     except:
         pass
-    return redirect(url_for("profile"))
+    return redirect("/konsumo/profile")
+

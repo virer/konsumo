@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, request, jsonify, copy_current_request_context, abort
+from flask import render_template, redirect, url_for, request, jsonify, copy_current_request_context, abort
 from flask_login import current_user, login_required
 from flask import Blueprint, redirect, url_for, request
 from konsumo.auth.models import User
@@ -6,6 +6,10 @@ from .lib import *
 import copy
 
 bp = Blueprint("konsumo", __name__, url_prefix="/konsumo")
+
+@bp.route("/profile")
+def profile():
+    return render_template('profile.html')
 
 @login_required
 @bp.route('/chart/<prefix>', methods=['GET'])
@@ -25,10 +29,6 @@ def chart(prefix):
                     series=copy.copy(series),
                     xaxis=copy.copy(xaxis),
                     )
-
-@bp.route("/profile")
-def profile():
-    return render_template('profile.html')
 
 @login_required
 @bp.route('/location', methods=['GET','POST'])
@@ -62,20 +62,3 @@ def form():
 def index():
     prefixes= [ "current", "global" ]
     return render_template("index.html", prefixes=copy.copy(prefixes), current_user=current_user)
-
-# @bp.route('/')
-# def root():
-#     user_id = "117426397869268208059"
-#     type = "water"
-#     user = User()
-#     print("TEST 1***")
-#     data = user.get(user_id)
-#     print(data)
-#     print("TEST 2***")
-#     _date = "2023-03-11"
-#     value1 = 356
-#     value2 = ""
-#     data = user.set_data(_date, type, value1, value2, user_id)
-#     print(data)
-#     print("TEST 3***")
-#     return redirect("/konsumo", code=302)

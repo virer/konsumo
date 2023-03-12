@@ -5,15 +5,9 @@ from konsumo import db
 import enum
 
 DEBUG = True
-
-# def get_db():
-#   if 'db' not in g:
-#     g.db = SQLAlchemy(current_app)
-#   return g.db
-
 class User(db.Model, UserMixin):
     __tablename__ = "user"
-    user_id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.VARCHAR(34), primary_key=True)
     name = db.Column(db.String(125))
     email = db.Column(db.String(250))
     profile_pic = db.Column(db.String(255))
@@ -32,15 +26,15 @@ class User(db.Model, UserMixin):
                 ).where(User.user_id == user_id)
         
         try:
-            row = db.session.execute(sql) 
-            user = list(row.fetchall())[0]
+            rows = db.session.execute(sql)
+            row = rows.all()[0]
         except Exception as e:
             if DEBUG:
                 print(e)
             return False
-        
+
         user = User(
-            id_=user[0], name=user[1], email=user[2], profile_pic=user[3], location=user[4]
+            id_=row[0], name=row[1], email=row[2], profile_pic=row[3], location=row[4]
         )
         return user
 
@@ -77,7 +71,7 @@ class User(db.Model, UserMixin):
         
         try:
             rows = db.session.execute(sql)
-            return rows.fetchall()
+            return rows.all()
         except Exception as e:
             if DEBUG:
                 print(e)
@@ -94,16 +88,9 @@ class TypeEnum(enum.Enum):
 
 class User_Data(db.Model):
     __tablename__ = "user_data"
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    date = db.Column(db.Date)
-    type = db.Column(db.Enum(TypeEnum))
+    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    date = db.Column(db.Date, index=True)
+    type = db.Column(db.Enum(TypeEnum), index=True)
     value1 = db.Column(db.Integer)
     value2 = db.Column(db.Integer, nullable=True)
     user_id = db.Column(db.ForeignKey("user.user_id"), nullable=False)
-
-# def init_db():
-#     db = get_db()
-#     db.create_all()
-
-# if __name__ == "__main__":
-#     init_db()

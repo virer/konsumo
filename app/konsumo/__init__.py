@@ -1,12 +1,10 @@
-import os
-
-import click
 from flask import Flask
 from flask.cli import with_appcontext
-from flask_sqlalchemy import SQLAlchemy
 
-from flask_login import LoginManager, current_user, login_required, login_user, logout_user
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager
 from oauthlib.oauth2 import WebApplicationClient
+import click
 
 login_manager = LoginManager()
 db = SQLAlchemy()
@@ -36,17 +34,30 @@ def create_app(test_config=None):
     app.register_blueprint(site.bp)
 
     # make "index" point at "/", which is handled by "konsumo.index"
-    app.add_url_rule("/", endpoint="index")
+    app.add_url_rule("/", endpoint="root")
 
     return app
 
 def init_db():
     db.drop_all()
     db.create_all()
+    db.session.commit()
 
 @click.command("init-db")
 @with_appcontext
 def init_db_command():
     """Clear existing data and create new tables."""
     init_db()
+    test_db() # FIXME TODO : remove this 
     click.echo("Initialized the database.")
+
+# FIXME TODO : remove this
+def test_db():
+    from konsumo.auth.models import User, User_Data
+    sql = db.insert(User).values(user_id="123", name="S", email="s@v.net", profile_pic="https://lh3.googleusercontent.com/a/...")
+    print(sql)
+    db.session.execute(sql)
+    db.session.commit()
+    db.session.close()
+    user = User()
+    print(dir(user.get(user_id="123")))
