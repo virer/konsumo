@@ -17,7 +17,7 @@
 
 {% if current_user.is_authenticated %}
 <form action="/konsumo/location" method="POST">
-    <input type="text" name="location" value="{{ current_user.location }}">
+    <input type="text" name="location" value="{{ location }}">
     <input type="submit" value="Save">
     </form>
 {% endif %}

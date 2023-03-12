@@ -2,7 +2,7 @@
 
 ## a little home energy consumption chart OpenSource projet
 
-This project is based on Python, Flask, ApexCharts (apexcharts.com), SQLAlchemy
+This project is based on Python, Flask, ApexCharts (apexcharts.com), SQLAlchemy, Pandas
 
 ### First time, run the following command to initialize de DB
 

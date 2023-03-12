@@ -29,9 +29,10 @@ def create_app(test_config=None):
     login_manager.init_app(app)
 
     # Import blueprint
-    from konsumo import auth, site
+    from konsumo import auth, site, api
     app.register_blueprint(auth.bp)
     app.register_blueprint(site.bp)
+    app.register_blueprint(api.bp)
 
     # make "index" point at "/", which is handled by "konsumo.index"
     app.add_url_rule("/", endpoint="root")
@@ -48,16 +49,4 @@ def init_db():
 def init_db_command():
     """Clear existing data and create new tables."""
     init_db()
-    test_db() # FIXME TODO : remove this 
     click.echo("Initialized the database.")
-
-# FIXME TODO : remove this
-def test_db():
-    from konsumo.auth.models import User, User_Data
-    sql = db.insert(User).values(user_id="123", name="S", email="s@v.net", profile_pic="https://lh3.googleusercontent.com/a/...")
-    print(sql)
-    db.session.execute(sql)
-    db.session.commit()
-    db.session.close()
-    user = User()
-    print(dir(user.get(user_id="123")))

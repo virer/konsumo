@@ -11,3 +11,5 @@ workers = multiprocessing.cpu_count() * 2 + 1
 # keyfile = '/etc/letsencrypt/live/example.com/privkey.pem'
 certfile= os.getenv("SSL_CRT", "/ssl/cert.pem")
 keyfile = os.getenv("SSL_KEY", "/ssl/key.pem")
+
+debug = True

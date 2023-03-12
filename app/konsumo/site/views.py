@@ -1,15 +1,23 @@
-from flask import render_template, redirect, url_for, request, jsonify, copy_current_request_context, abort
+from flask import render_template, redirect, request, jsonify, copy_current_request_context, abort
 from flask_login import current_user, login_required
-from flask import Blueprint, redirect, url_for, request
+from flask import Blueprint, redirect, request
 from konsumo.auth.models import User
 from .lib import *
 import copy
 
 bp = Blueprint('konsumo', __name__, url_prefix='/konsumo')
 
-@bp.route('/profile')
+@login_required
+@bp.route('/regenerate-secret', methods=['POST'])
+def regenerate():
+    User.regenerate_key(current_user.id)
+    return redirect('/konsumo/profile?notif=saved')
+
+@bp.route('/profile', methods=['GET'])
 def profile():
-    return render_template('profile.html')
+    location, access_key, secret_key = User.get_info(current_user.id)
+    notif_msg = 'saved' == request.args.get('notif') 
+    return render_template('profile.html', notif_msg=notif_msg, access_key=access_key, secret_key=secret_key)
 
 @login_required
 @bp.route('/chart/<prefix>', methods=['GET'])
@@ -34,12 +42,11 @@ def chart(prefix):
 def location():
     if request.method=='POST':
         location = request.form['location']
-        User().set_location(current_user.id, location)
+        User(current_user.id).set_location(current_user.id, location)
         return redirect('/konsumo/location?notif=saved')
-    notif_msg = False
-    if request.args.get('notif') == 'saved':
-        notif_msg = True
-    return render_template('location.html', notif_msg=notif_msg)
+    location, access_key, secret_key = User.get_info(current_user.id)
+    notif_msg = 'saved' == request.args.get('notif')
+    return render_template('location.html', location=location, notif_msg=notif_msg)
 
 @login_required
 @bp.route('/form', methods=['GET','POST'])
@@ -55,9 +62,7 @@ def form():
 
         User.set_data(date, type, value1, value2, current_user.id)
         return redirect('/konsumo/form?notif=saved')        
-    notif_msg = False
-    if request.args.get('notif') == 'saved':
-        notif_msg = True
+    notif_msg = 'saved' == request.args.get('notif')
     return render_template('form.html', notif_msg=notif_msg)
 
 @bp.route('/', methods=['GET'])

@@ -1,7 +1,8 @@
 from flask_login import login_user, logout_user
 from flask import Blueprint, redirect, request
 from flask import current_app as app 
-import requests, json
+import requests
+import json
 bp = Blueprint("auth", __name__, url_prefix="/konsumo/auth")
 from .models import User
 from konsumo import client, login_manager
@@ -80,8 +81,7 @@ def callback():
     else:
         return "User email not available or not verified by Google.", 400
 
-    # Create a user in your db with the information provided
-    # by Google
+    # Create a user in your db with the information provided by Google
     user = User(
         id_=unique_id, name=users_name, email=users_email, profile_pic=picture
     )
