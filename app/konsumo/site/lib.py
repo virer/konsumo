@@ -56,10 +56,9 @@ def construct_data(data, chart_type):
     
     return df.to_dict('records')
 
-def present_data(data, chartid):
+def present_data(data, chartid, chart_type):
     heating_period={ "start":"09", "end":"05" }
 
-    chart_type = 'electricity'
     data = construct_data(data, chart_type)
 
     if chartid == "current":

@@ -22,11 +22,11 @@ def profile():
 @login_required
 @bp.route('/chart/<prefix>', methods=['GET'])
 def chart(prefix):
-    type = request.args.get('type')
+    chart_type = request.args.get('type')
     # Get data here
-    data = User().get_data(current_user.id, type)
+    data = User().get_data(current_user.id, chart_type)
 
-    title, series, xaxis = present_data(data, prefix)
+    title, series, xaxis = present_data(data, prefix, chart_type)
 
     return render_template('chart.js', 
                     prefix=copy.copy(prefix), 
