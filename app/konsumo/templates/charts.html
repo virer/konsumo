@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %} Konsumo :: a home energy consumption chart {% endblock %}
+{% block head %}
+<meta http-equiv="refresh" content="300">
+<link rel="icon" href="data:;base64,iVBORw0KGgo=">
+<style>
+
+  .konsumo_chart {
+  max-width: 650px;
+  margin: 35px auto;
+}
+  
+</style>
+{% endblock %}
+{% block content %}
+
+{% if current_user.is_authenticated %}
+{% for prefix in prefixes %}
+  <div id="{{ prefix }}_chart" class="konsumo_chart chart-box"></div>
+{% endfor %}
+
+{% for prefix in prefixes %}
+  <script src="/konsumo/chart/{{ prefix }}"></script>
+{% endfor %}
+
+{% endif %}
+
+{% endblock %}
