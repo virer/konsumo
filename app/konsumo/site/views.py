@@ -22,9 +22,7 @@ def profile():
 @login_required
 @bp.route('/chart/<prefix>', methods=['GET'])
 def chart(prefix):
-
-    # elec FIXME TODO
-    type = 'electricity'
+    type = request.args.get('type')
     # Get data here
     data = User().get_data(current_user.id, type)
 
@@ -68,7 +66,11 @@ def form():
 @bp.route('/charts', methods=['GET'])
 def charts():
     prefixes= [ 'current', 'global' ]
-    return render_template('charts.html', prefixes=copy.copy(prefixes), current_user=current_user)
+    type = request.args.get('type')
+    return render_template('charts.html', 
+            type=type,
+            prefixes=copy.copy(prefixes), 
+            current_user=current_user)
 
 @bp.route('/', methods=['GET'])
 @bp.route('', methods=['GET'])

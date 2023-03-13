@@ -95,7 +95,7 @@ def callback():
     login_user(user)
 
     # Send user back to homepage
-    return redirect("/konsumo/charts")
+    return redirect("/konsumo/charts?type=electricity")
 
 @bp.route("/logout")
 def logout():

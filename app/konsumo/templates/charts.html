@@ -15,12 +15,23 @@
 {% block content %}
 
 {% if current_user.is_authenticated %}
+
+<form method="GET" action="/konsumo/charts" name="ChartTypeForm">
+  <select name="type" onchange="ChartTypeForm.submit()">
+    <option selected>{{ type }}</option>
+    <option>electricity</option>
+    <option>gazoline</option>
+    <option>water</option>
+    <option>other</option>
+  </select>
+</form>
+
 {% for prefix in prefixes %}
   <div id="{{ prefix }}_chart" class="konsumo_chart chart-box"></div>
 {% endfor %}
 
 {% for prefix in prefixes %}
-  <script src="/konsumo/chart/{{ prefix }}"></script>
+  <script src="/konsumo/chart/{{ prefix }}?type={{ type }}"></script>
 {% endfor %}
 
 {% endif %}
