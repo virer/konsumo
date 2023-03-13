@@ -11,10 +11,11 @@ var {{ prefix }}_options = {
     enabled: false
   },
   stroke: {
-    
     curve: 'smooth',
-   
   },
+  {% if chart_type == 'gazoline' %}
+  colors: [ '#eb2e2e', '#C70039', '#900C3F' ],
+  {% endif %}
   title: {
     text: '{{ title }}',
     align: 'left'

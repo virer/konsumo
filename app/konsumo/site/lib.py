@@ -1,3 +1,4 @@
+from konsumo.auth.models import User
 from datetime import datetime, date, timedelta
 import pandas as pd
 import json
@@ -56,25 +57,36 @@ def construct_data(data, chart_type):
     
     return df.to_dict('records')
 
-def present_data(data, chartid, chart_type):
+def convert_date(dat):
+    date_format = "%Y-%m-%d"
+    return datetime.strptime(dat, date_format).date()
+
+def present_data(user_id, chartid, chart_type):
+    # FIXME : load this from user profile
     heating_period={ "start":"09", "end":"05" }
 
-    data = construct_data(data, chart_type)
-
+    xaxis = ""
     if chartid == "current":
-        # fields = ['x', 'y']
-        # dicts  = [dict(zip(fields, d)) for d in data]
-        # print(dicts)
+        title  = "Current year consumption"
+        start = "2023-03-05"
+        end = "2023-03-31"
+        data = User().get_data_period(user_id, chart_type, start, end)
+        data = construct_data(data, chart_type)
         series = [{ "name":"daily avg", "data": data }]
-        title  = "Current year"
-        xaxis  = "" #["Aug","","Sep","","Oct","","Nov","","Dec","","Jan","","Feb","","Mar","","Apr","","May","","Jun","","Jul",""]
     elif chartid == "global":
-        series = [
-            { "name":"2022-2023", "data": [ 0,  0, 100, 240, 330, 426, 421, 410, 180,  90,  0, 0 ] },
-            { "name":"2021-2022", "data": [ 0, 50, 200, 340, 430, 526, 521, 610, 580, 290, 90, 0 ] },
-            { "name":"2019-2020", "data": [ 0,  0, 100, 240, 330, 426, 421, 410, 180,  90,  0, 0 ] },
-            ]
         title="Previous year consumption"
-        xaxis = ["Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar","Apr","May","Jun","Jul"]
+        series = []
+        lines = [ "2021", "2022", "2023"]
+        for year in lines:
+            next_year= str(int(year) + 1)
+            start = year + "-" + heating_period["start"] + "-01"
+            end   = next_year + "-" + heating_period["end"] + "-31"
+            data   = User().get_data_period(user_id, chart_type, 
+                                convert_date(start),
+                                convert_date(end) 
+                            )
+            if len(data) > 0:
+                data  = construct_data(data, chart_type)
+                series.append({ "name": year+"-"+next_year, "data": data })
 
     return title, json.dumps(series, default=json_serial), json.dumps(xaxis)

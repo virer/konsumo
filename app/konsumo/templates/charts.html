@@ -18,11 +18,9 @@
 
 <form method="GET" action="/konsumo/charts" name="ChartTypeForm">
   <select name="type" onchange="ChartTypeForm.submit()">
-    <option selected>{{ type }}</option>
-    <option>electricity</option>
-    <option>gazoline</option>
-    <option>water</option>
-    <option>other</option>
+    {% for type_l in type_list %}
+    <option {{ 'selected' if type_l == type }}>{{ type_l }}</option>
+    {% endfor %}
   </select>
 </form>
 

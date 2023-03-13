@@ -16,6 +16,8 @@ def create_app(test_config=None):
     
     app = Flask(__name__, instance_relative_config=True, static_url_path='/konsumo/static')
     app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+    # Debug SQL query :
+    # app.config["SQLALCHEMY_ECHO"] = True
     app.config.from_pyfile("config.py", silent=False)
     
     # initialize Flask-SQLAlchemy and the init-db command

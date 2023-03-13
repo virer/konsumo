@@ -23,12 +23,10 @@ def profile():
 @bp.route('/chart/<prefix>', methods=['GET'])
 def chart(prefix):
     chart_type = request.args.get('type')
-    # Get data here
-    data = User().get_data(current_user.id, chart_type)
-
-    title, series, xaxis = present_data(data, prefix, chart_type)
+    title, series, xaxis = present_data(current_user.id, prefix, chart_type)
 
     return render_template('chart.js', 
+                    chart_type=copy.copy(chart_type),
                     prefix=copy.copy(prefix), 
                     title=copy.copy(title),
                     series=copy.copy(series),
@@ -67,8 +65,9 @@ def form():
 def charts():
     prefixes= [ 'current', 'global' ]
     type = request.args.get('type')
+    type_list = [ 'electricity', 'gazoline', 'water', 'other' ]
     return render_template('charts.html', 
-            type=type,
+            type=type, type_list=type_list,
             prefixes=copy.copy(prefixes), 
             current_user=current_user)
 
