@@ -19,6 +19,6 @@ podman run --rm $KONSUMO_DEV -v /ssl:/ssl \
     -e DBNAME="konsumo" \
     -e SSL_CRT="/ssl/cert.pem" \
     -e SSL_KEY="/ssl/key.pem" \
-    localhost/konsumo:latest $1
+    localhost/konsumo:latest $1 $2
 
 # EOF
