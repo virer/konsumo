@@ -14,17 +14,89 @@
 {% endblock %}
 {% block content %}
 
-{% if current_user.is_authenticated %}
-{% for prefix in prefixes %}
-  <div id="{{ prefix }}_chart" class="konsumo_chart chart-box"></div>
-{% endfor %}
+<div id="chart"></div>
 
-{% for prefix in prefixes %}
-  <script src="/konsumo/chart/{{ prefix }}"></script>
-{% endfor %}
+<script>
+ var options = {
+     series: [{
+       name: "Electricity 2023",
+       data: [15, 22, 58, 64, 73, 76, 81, 70, 36, 17 ]
+     },
+     {
+       name: "Electricity 2022",
+       data: [12, 21, 62, 52, 73, 58, 69, 77, 36, 15 ]
+     },
+     {
+       name: 'Electricity 2021',
+       data: [17, 27, 74, 99, 75, 58, 62, 77, 32, 16 ]
+     }
+   ],
+     chart: {
+     height: 350,
+     type: 'line',
+     zoom: {
+       enabled: false
+     },
+   },
+   dataLabels: {
+     enabled: false
+   },
+   stroke: {
+     width: [5, 7, 5],
+     curve: 'straight',
+     dashArray: [0, 8, 5]
+   },
+   title: {
+     text: 'Electricity consumption',
+     align: 'left'
+   },
+   legend: {
+     tooltipHoverFormatter: function(val, opts) {
+       return val + ' - <strong>' + opts.w.globals.series[opts.seriesIndex][opts.dataPointIndex] + '</strong>'
+     }
+   },
+   markers: {
+     size: 0,
+     hover: {
+       sizeOffset: 6
+     }
+   },
+   xaxis: {
+     categories: ['Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun' ],
+   },
+   tooltip: {
+     y: [
+       {
+         title: {
+           formatter: function (val) {
+             return val + ""
+           }
+         }
+       },
+       {
+         title: {
+           formatter: function (val) {
+             return val + ""
+           }
+         }
+       },
+       {
+         title: {
+           formatter: function (val) {
+             return val;
+           }
+         }
+       }
+     ]
+   },
+   grid: {
+     borderColor: '#f1f1f1',
+   }
+   };
 
-{% else %}
- FIXME Expose demo/sample here FIXME
-{% endif %}
+   var chart = new ApexCharts(document.querySelector("#chart"), options);
+   chart.render(); 
+ 
+</script>
 
 {% endblock %}

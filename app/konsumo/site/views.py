@@ -65,8 +65,12 @@ def form():
     notif_msg = 'saved' == request.args.get('notif')
     return render_template('form.html', notif_msg=notif_msg)
 
+@bp.route('/charts', methods=['GET'])
+def charts():
+    prefixes= [ 'current', 'global' ]
+    return render_template('charts.html', prefixes=copy.copy(prefixes), current_user=current_user)
+
 @bp.route('/', methods=['GET'])
 @bp.route('', methods=['GET'])
 def index():
-    prefixes= [ 'current', 'global' ]
-    return render_template('index.html', prefixes=copy.copy(prefixes), current_user=current_user)
+    return render_template('index.html', current_user=current_user)
