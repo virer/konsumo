@@ -1,6 +1,7 @@
 from konsumo.auth.models import User
 from datetime import datetime, date, timedelta
 import pandas as pd
+import calendar
 import json
 
 DEBUG = True
@@ -31,6 +32,28 @@ def deltadays(dat1, dat2):
 #     last_value = list(data)[0][1]
 #     return [(k, diff_m(v)) for k,v in data ]
 
+def month_list(start, end):
+    mylist = []
+    date_list=calendar.month_abbr
+    for i in range(len(date_list)):
+        if i >= start:
+            mylist.append(date_list[i])
+
+    for i in range(len(date_list)):
+        if i <= end and i != 0:
+            mylist.append(date_list[i])
+
+    mylist2 = []
+    for i in range(len(mylist)):
+        mylist2.append("01-{}".format(mylist[i]))
+        mylist2.append("15-{}".format(mylist[i]))
+    
+    return mylist2
+
+def convert_date(dat):
+    date_format = "%Y-%m-%d"
+    return datetime.strptime(dat, date_format).date()
+
 def construct_data(data, chart_type, no_transform=False):
     df = pd.DataFrame(data)
 
@@ -42,7 +65,7 @@ def construct_data(data, chart_type, no_transform=False):
     # Here we create a "DIFF" column with the CAPACITY minus the previous value
     if chart_type == 'electricity' or chart_type == 'water' or chart_type == 'gaz' or chart_type == 'other_plus' :
         df['DIFF'] = df['CAPACITY'] - series_shifted
-    elif chart_type == 'gazoline' or chart_type == 'gaz-tank' or chart_type == 'other_minus' :
+    elif chart_type == 'gazoline' or chart_type == 'gaz_tank' or chart_type == 'other_minus' :
         df['DIFF'] = series_shifted - df['CAPACITY'] 
 
     # We remove the CAPACITY column
@@ -52,52 +75,95 @@ def construct_data(data, chart_type, no_transform=False):
     # Remove .0
     df['DIFF'] = df['DIFF'].astype(int).astype(str)
 
-    # Remove year from date column 
-    # df['DATE'] = pd.to_datetime(df['DATE'].astype(str), format='%Y-%m-%d').dt.strftime('%d-%b')
-
-    if no_transform:        
-        return df['DIFF'].values.tolist(), df['DATE'].astype(str).values.tolist()
+    if no_transform:
+        df['DATE'] = pd.to_datetime(df['DATE'].astype(str), format='%Y-%m-%d') # This format is the good one , others with year in the end are buggy with df.loc[]
+        df['DIFF'] = df['DIFF'].astype(int)
+        return df
     else:
-        # For data construction purpose :
+        # For data construction purpose for ApexCharts (it needs { x: <date>, y: <value>})
         df.rename(columns = { df.columns[0]:'x', df.columns[1]:'y' }, inplace=True)
     
         return df.to_dict('records')
 
-def convert_date(dat):
-    date_format = "%Y-%m-%d"
-    return datetime.strptime(dat, date_format).date()
+def mean_avg(year, data, cal_list):
+    ret = []
+    for i in range(len(cal_list)):
+        if i+1 < len(cal_list):
+            day, month = cal_list[i].split('-')
+            start = '{}-{}-{}'.format(year, month, day)
+
+            if cal_list[i] == '15-Dec': 
+                year = str(int(year)+1)
+            day, month = cal_list[i+1].split('-')
+            end   = '{}-{}-{}'.format(year, month, day)
+
+            df2 = data.loc[( data['DATE'] >= start ) & ( data['DATE'] < end )]
+            a=round(df2['DIFF'].mean(), 2)
+
+            # Replace Pandas null value(NaN) with null -> for Javascript
+            if str(a) == "nan": 
+                a = "null"
+            ret.append(a)
+
+    return ret
+
+def get_last_day_of_month(input, format='%Y-%m-%d'):
+    dt=datetime.strptime(input, format)
+    ret = calendar.monthrange(dt.year, dt.month)
+    day = ret[1]
+    # note:
+    # ret [0]  = weekday of first day (between 0-6 ~ Mon-Sun))
+    # ret [1] = last day of the month
+    return day
+
+def current_start_end_period(heating_period):
+    m=date.today().month
+    year=date.today().year
+
+    # If we are after the heating period, display the previous period on the graph
+    if m < heating_period["start"]+3:
+        year=year-1
+
+    # {}:0>2 } fill the string with leading Zero
+    start="{}-{:0>2}-01".format(date.today().year-1, heating_period["start"])
+    lastday=get_last_day_of_month(start)
+    end="{}-{:0>2}-{}".format(date.today().year, heating_period["end"], lastday)
+    return start, end
 
 def present_data(user_id, chartid, chart_type):
     # FIXME : load this from user profile
-    heating_period={ "start":"09", "end":"05" }
+    heating_period={ "start":9, "end":5 }
 
+    year = date.today().year 
     if chartid == "current":
         xaxis = 'type: "datetime "'
         title  = "Current year consumption"
-        start = "2023-03-05"
-        end = "2023-03-31"
+        start, end = current_start_end_period(heating_period)
         data = User().get_data_period(user_id, chart_type, start, end)
         data = construct_data(data, chart_type)
         series = [{ "name":"daily avg", "data": data }]
     elif chartid == "global":
-        title="Previous year consumption"
+        title="Previous years consumption"
         series = []
-        lines = [ "2021", "2022", "2023"]
-        for year in lines:
-            next_year= str(int(year) + 1)
-            start = year + "-" + heating_period["start"] + "-01"
-            end   = next_year + "-" + heating_period["end"] + "-31"
+
+        cal_list = month_list(heating_period["start"], heating_period["end"])
+        xaxis = 'categories: {}'.format( cal_list )
+
+        # List the 3 previous year
+        lines = [ (str(year-3), str(year-2)), 
+                  (str(year-2), str(year-1)), 
+                  (str(year-1), str(year)) ]
+
+        for y, next_year in lines:
+            start = "{}-0{}-01".format(y,         heating_period["start"])
+            end   = "{}-0{}-31".format(next_year, heating_period["end"])
             data   = User().get_data_period(user_id, chart_type, 
                                 convert_date(start),
                                 convert_date(end) 
                             )
             if len(data) > 0:
-                date_list = []
-                data, date_list = construct_data(data, chart_type, no_transform=True)
-                print(data)                
-                series.append({ "name": year+"-"+next_year, "data": data })
+                data = construct_data(data, chart_type, no_transform=True)
+                data = mean_avg(y, data, cal_list)             
+                series.append({ "name": "{}-{}".format(y,next_year), "data": data })
 
-        xaxis = date_list
-        xaxis = 'categories: {}'.format(xaxis)
-
-    return title, json.dumps(series, default=json_serial), xaxis
+    return title, json.dumps(series, default=json_serial).replace('"null"','null'), xaxis
