@@ -66,7 +66,9 @@ def construct_data(data, chart_type, no_transform=False):
     if chart_type == 'electricity' or chart_type == 'water' or chart_type == 'gaz' or chart_type == 'other_plus' :
         df['DIFF'] = df['CAPACITY'] - series_shifted
     elif chart_type == 'gazoline' or chart_type == 'gaz_tank' or chart_type == 'other_minus' :
-        df['DIFF'] = series_shifted - df['CAPACITY'] 
+        df['DIFF'] = series_shifted - df['CAPACITY']
+        # Remove negative value:
+        df = df[ (df['DIFF'] > 0) | (df['DIFF'].isnull())] 
 
     # We remove the CAPACITY column
     df.drop('CAPACITY', inplace=True, axis=1)

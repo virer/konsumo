@@ -14,7 +14,7 @@ var {{ prefix }}_options = {
     curve: 'smooth',
   },
   {% if chart_type == 'gazoline' %}
-  colors: [ '#eb2e2e', '#C70039', '#900C3F' ],
+  colors: [ '#eb2e2e', '#ff9966', '#ffff00' ],
   {% endif %}
   title: {
     text: '{{ title }}',
