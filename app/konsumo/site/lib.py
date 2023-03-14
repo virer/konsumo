@@ -31,7 +31,7 @@ def deltadays(dat1, dat2):
 #     last_value = list(data)[0][1]
 #     return [(k, diff_m(v)) for k,v in data ]
 
-def construct_data(data, chart_type):
+def construct_data(data, chart_type, no_transform=False):
     df = pd.DataFrame(data)
 
     df.rename(columns = { df.columns[0]:'DATE', df.columns[1]:'CAPACITY' }, inplace=True)
@@ -40,9 +40,9 @@ def construct_data(data, chart_type):
     series_shifted = df['CAPACITY'].shift()
 
     # Here we create a "DIFF" column with the CAPACITY minus the previous value
-    if chart_type == 'electricity':
+    if chart_type == 'electricity' or chart_type == 'water' or chart_type == 'gaz' or chart_type == 'other_plus' :
         df['DIFF'] = df['CAPACITY'] - series_shifted
-    elif chart_type == 'gazoline':
+    elif chart_type == 'gazoline' or chart_type == 'gaz-tank' or chart_type == 'other_minus' :
         df['DIFF'] = series_shifted - df['CAPACITY'] 
 
     # We remove the CAPACITY column
@@ -52,10 +52,16 @@ def construct_data(data, chart_type):
     # Remove .0
     df['DIFF'] = df['DIFF'].astype(int).astype(str)
 
-    # For data construction purpose :
-    df.rename(columns = { df.columns[0]:'x', df.columns[1]:'y' }, inplace=True)
+    # Remove year from date column 
+    # df['DATE'] = pd.to_datetime(df['DATE'].astype(str), format='%Y-%m-%d').dt.strftime('%d-%b')
+
+    if no_transform:        
+        return df['DIFF'].values.tolist(), df['DATE'].astype(str).values.tolist()
+    else:
+        # For data construction purpose :
+        df.rename(columns = { df.columns[0]:'x', df.columns[1]:'y' }, inplace=True)
     
-    return df.to_dict('records')
+        return df.to_dict('records')
 
 def convert_date(dat):
     date_format = "%Y-%m-%d"
@@ -65,8 +71,8 @@ def present_data(user_id, chartid, chart_type):
     # FIXME : load this from user profile
     heating_period={ "start":"09", "end":"05" }
 
-    xaxis = ""
     if chartid == "current":
+        xaxis = 'type: "datetime "'
         title  = "Current year consumption"
         start = "2023-03-05"
         end = "2023-03-31"
@@ -86,7 +92,12 @@ def present_data(user_id, chartid, chart_type):
                                 convert_date(end) 
                             )
             if len(data) > 0:
-                data  = construct_data(data, chart_type)
+                date_list = []
+                data, date_list = construct_data(data, chart_type, no_transform=True)
+                print(data)                
                 series.append({ "name": year+"-"+next_year, "data": data })
 
-    return title, json.dumps(series, default=json_serial), json.dumps(xaxis)
+        xaxis = date_list
+        xaxis = 'categories: {}'.format(xaxis)
+
+    return title, json.dumps(series, default=json_serial), xaxis

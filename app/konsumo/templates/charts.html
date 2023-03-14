@@ -19,7 +19,7 @@
 <form method="GET" action="/konsumo/charts" name="ChartTypeForm">
   <select name="type" onchange="ChartTypeForm.submit()">
     {% for type_l in type_list %}
-    <option {{ 'selected' if type_l == type }}>{{ type_l }}</option>
+    <option {{ 'selected' if type_l == type }} value="{{ type_l }}">{{ type_l | replace('_',' ') }}</option>
     {% endfor %}
   </select>
 </form>

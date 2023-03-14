@@ -32,7 +32,7 @@ var {{ prefix }}_options = {
     }
   },
   xaxis: {
-    type: "datetime"
+    {{ xaxis }}
   },
   tooltip: {
     y: [

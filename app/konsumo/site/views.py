@@ -1,4 +1,4 @@
-from flask import render_template, redirect, request, jsonify, copy_current_request_context, abort
+from flask import render_template, redirect, request, make_response, jsonify, copy_current_request_context, abort
 from flask_login import current_user, login_required
 from flask import Blueprint, redirect, request
 from konsumo.auth.models import User
@@ -25,13 +25,15 @@ def chart(prefix):
     chart_type = request.args.get('type')
     title, series, xaxis = present_data(current_user.id, prefix, chart_type)
 
-    return render_template('chart.js', 
+    resp = make_response(render_template('chart.js', 
                     chart_type=copy.copy(chart_type),
                     prefix=copy.copy(prefix), 
                     title=copy.copy(title),
                     series=copy.copy(series),
                     xaxis=copy.copy(xaxis),
-                    )
+                    ), 200)
+    resp.headers['Content-Type'] = 'text/javascript'
+    return resp
 
 @login_required
 @bp.route('/location', methods=['GET','POST'])
@@ -65,7 +67,7 @@ def form():
 def charts():
     prefixes= [ 'current', 'global' ]
     type = request.args.get('type')
-    type_list = [ 'electricity', 'gazoline', 'water', 'other' ]
+    type_list = [ 'electricity', 'gaz', 'gaz_tank', 'gazoline', 'water', 'other_plus', 'other_minus' ]
     return render_template('charts.html', 
             type=type, type_list=type_list,
             prefixes=copy.copy(prefixes), 

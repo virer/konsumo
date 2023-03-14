@@ -137,9 +137,12 @@ class User(db.Model, UserMixin):
 
 class TypeEnum(enum.Enum):
     gazoline=1
-    water=2
-    electricity=3
-    other=4
+    gaz=2
+    gaz_tank=3
+    water=4
+    electricity=5
+    other_plus=6
+    other_minus=7
 
 class User_Data(db.Model):
     __tablename__ = "user_data"
