@@ -18,10 +18,10 @@
 
 {% if current_user.is_authenticated %}
 <div class="mb-3">
- <form action="/konsumo/data/list" method="GET" role="form" onchange="submit()"></form>
- <div class="row">
-  <div class="col-5">   
+  <div class="row">
+  <div class="col-5">
     <div class="mb-4 row">
+        <form action="/konsumo/data/list" method="GET" role="form" onchange="submit();">
         <label for="type" class="col-sm-3 col-form-label">Type</label>
         <div class="col-sm-8">
             <select name="type" class="form-select">
@@ -30,13 +30,14 @@
             {% endfor %}
             </select>
         </div>
+        </form>
     </div>
   </div>
- </div>
- </form>
-
-<!-- list data for specified data type -->
-<table border="1">
+  </div>
+ 
+ <div class="row">
+   <div class="col-6">   
+    <table class="table table-striped">
     <tr>
         <td><b>Date</b></td>
         <td><b>Value 1</b></td>
@@ -52,7 +53,10 @@
             <td><a href="/konsumo/data/del?type={{type}}&id={{ id }}" class="btn btn-labeled btn-danger"><span class="btn-label"><i class="fa fa-trash"></i></span>del</td> <!-- TODO add "X" icon here-->
         </tr>
     {% endfor %}
-</table>
+    </table>
+   </div>
+ </div>
+
 
 </div>
 {% endif %}
