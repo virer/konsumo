@@ -52,19 +52,18 @@ def location():
 @bp.route('/encoding', methods=['GET','POST'])
 def encoding():
     global type_list
+    chart_type = request.args.get('type')
     if request.method=='POST':
         date   = request.form['date']
-        type   = request.form['type']
         value1 = request.form['value1']
         value2 = request.form['value2']+"" # ALLOWED NULL VALUE HERE
 
         # Convert date from DD-MM-YYYY to YYYY-MM-DD
         # date = datetime.strptime(date,'%d-%m-%Y').strftime('%Y-%m-%d')
 
-        User.set_data(date, type, value1, value2, current_user.id)
+        User.set_data(date, chart_type, value1, value2, current_user.id)
         return redirect('/konsumo/encoding?notif=saved')        
     
-    chart_type = request.args.get('type')
     if chart_type == None:
         chart_type = type_list[0]
 
@@ -78,34 +77,37 @@ def encoding():
 @bp.route('/data/list', methods=['GET'])
 def data_list():
     global type_list
-    type = request.args.get('type')
-    if type == None:
-        type = type_list[0]
-    data_list = User().get_raw_data(current_user.id, type)
+    chart_type = request.args.get('type')
+    if chart_type == None:
+        chart_type = type_list[0]
+    data_list = User().get_raw_data(current_user.id, chart_type)
 
     return render_template('data_list.html', 
                     type_list=type_list,
-                    type=type,
+                    type=chart_type,
                     data_list=data_list)
 
 @login_required
 @bp.route('/data/del', methods=['GET'])
 def data_del():
     id = request.args.get('id')
-    type = request.args.get('type')
+    chart_type = request.args.get('type')
 
-    User().del_data(current_user.id, type, id)
+    if chart_type in type_list:
+        User().del_data(current_user.id, chart_type, id)
 
-    return redirect('/konsumo/data/list?type={0}'.format(type))
+        return redirect('/konsumo/data/list?type={0}'.format(chart_type))
+    else:
+        return redirect('/konsumo')
 
 @bp.route('/charts', methods=['GET'])
 def charts():
     global type_list
     prefixes= [ 'current', 'global' ]
-    type = request.args.get('type')
+    chart_type = request.args.get('type')
     
     return render_template('charts.html', 
-            type=type, type_list=type_list,
+            type=chart_type, type_list=type_list,
             prefixes=copy.copy(prefixes), 
             current_user=current_user)
 
