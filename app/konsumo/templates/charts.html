@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %} Konsumo :: a home energy consumption chart {% endblock %}
+{% block head %}
+<meta http-equiv="refresh" content="300">
+<link rel="icon" href="data:;base64,iVBORw0KGgo=">
+<style>
+
+  .konsumo_chart {
+  max-width: 650px;
+  margin: 35px auto;
+}
+  
+</style>
+{% endblock %}
+{% block content %}
+<center><h2>Konsumo</h2></center>
+{% if current_user.is_authenticated %}
+
+<form method="GET" action="/konsumo/charts" name="ChartTypeForm">
+  <select name="type" onchange="ChartTypeForm.submit()">
+    {% for type_l in type_list %}
+    <option {{ 'selected' if type_l == type }} value="{{ type_l }}">{{ type_l | replace('_',' ') }}</option>
+    {% endfor %}
+  </select>
+</form>
+
+{% for prefix in prefixes %}
+  <div id="{{ prefix }}_chart" class="konsumo_chart chart-box"></div>
+{% endfor %}
+
+{% for prefix in prefixes %}
+  <script src="/konsumo/chart/{{ prefix }}?type={{ type }}"></script>
+{% endfor %}
+
+{% endif %}
+
+{% endblock %}

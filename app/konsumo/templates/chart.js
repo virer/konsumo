@@ -11,10 +11,11 @@ var {{ prefix }}_options = {
     enabled: false
   },
   stroke: {
-    
     curve: 'smooth',
-   
   },
+  {% if chart_type == 'gazoline' %}
+  colors: [ '#eb2e2e', '#ff9966', '#ffff00' ],
+  {% endif %}
   title: {
     text: '{{ title }}',
     align: 'left'
@@ -31,7 +32,7 @@ var {{ prefix }}_options = {
     }
   },
   xaxis: {
-    type: "datetime"
+    {{ xaxis }}
   },
   tooltip: {
     y: [

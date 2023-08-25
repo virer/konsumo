@@ -5,7 +5,7 @@ host = os.getenv("HOST", "0.0.0.0")
 port = os.getenv("PORT", "8080")
 bind = "{}:{}".format(host, port)
 log_config = "/app/logger.ini"
-workers = multiprocessing.cpu_count() * 2 + 1
+workers = multiprocessing.cpu_count() + 1
 
 # certfile = '/etc/letsencrypt/live/example.com/fullchain.pem'
 # keyfile = '/etc/letsencrypt/live/example.com/privkey.pem'

@@ -4,4 +4,5 @@ README.md
 app/static/examples/*
 app/static/examples
 .git
+.github
 .gitignore

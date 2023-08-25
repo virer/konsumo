@@ -1,4 +1,4 @@
-from flask import render_template, redirect, request, jsonify, copy_current_request_context, abort
+from flask import render_template, redirect, request, make_response, jsonify, copy_current_request_context, abort
 from flask_login import current_user, login_required
 from flask import Blueprint, redirect, request
 from konsumo.auth.models import User
@@ -6,6 +6,8 @@ from .lib import *
 import copy
 
 bp = Blueprint('konsumo', __name__, url_prefix='/konsumo')
+
+type_list = [ 'electricity', 'gaz', 'gaz_tank', 'gazoline', 'water', 'other_plus', 'other_minus' ]
 
 @login_required
 @bp.route('/regenerate-secret', methods=['POST'])
@@ -22,20 +24,18 @@ def profile():
 @login_required
 @bp.route('/chart/<prefix>', methods=['GET'])
 def chart(prefix):
+    chart_type = request.args.get('type')
+    title, series, xaxis = present_data(current_user.id, prefix, chart_type)
 
-    # elec FIXME TODO
-    type = 'electricity'
-    # Get data here
-    data = User().get_data(current_user.id, type)
-
-    title, series, xaxis = present_data(data, prefix)
-
-    return render_template('chart.js', 
+    resp = make_response(render_template('chart.js', 
+                    chart_type=copy.copy(chart_type),
                     prefix=copy.copy(prefix), 
                     title=copy.copy(title),
                     series=copy.copy(series),
                     xaxis=copy.copy(xaxis),
-                    )
+                    ), 200)
+    resp.headers['Content-Type'] = 'text/javascript'
+    return resp
 
 @login_required
 @bp.route('/location', methods=['GET','POST'])
@@ -49,8 +49,9 @@ def location():
     return render_template('location.html', location=location, notif_msg=notif_msg)
 
 @login_required
-@bp.route('/form', methods=['GET','POST'])
-def form():
+@bp.route('/encoding', methods=['GET','POST'])
+def encoding():
+    global type_list
     if request.method=='POST':
         date   = request.form['date']
         type   = request.form['type']
@@ -61,12 +62,54 @@ def form():
         # date = datetime.strptime(date,'%d-%m-%Y').strftime('%Y-%m-%d')
 
         User.set_data(date, type, value1, value2, current_user.id)
-        return redirect('/konsumo/form?notif=saved')        
+        return redirect('/konsumo/encoding?notif=saved')        
+    
+    chart_type = request.args.get('type')
+    if chart_type == None:
+        chart_type = type_list[0]
+
     notif_msg = 'saved' == request.args.get('notif')
-    return render_template('form.html', notif_msg=notif_msg)
+    return render_template('encoding.html', 
+                    type_list=type_list, 
+                    chart_type=chart_type,                          
+                    notif_msg=notif_msg)
+
+@login_required
+@bp.route('/data/list', methods=['GET'])
+def data_list():
+    global type_list
+    type = request.args.get('type')
+    if type == None:
+        type = type_list[0]
+    data_list = User().get_raw_data(current_user.id, type)
+
+    return render_template('data_list.html', 
+                    type_list=type_list,
+                    type=type,
+                    data_list=data_list)
+
+@login_required
+@bp.route('/data/del', methods=['GET'])
+def data_del():
+    id = request.args.get('id')
+    type = request.args.get('type')
+
+    User().del_data(current_user.id, type, id)
+
+    return redirect('/konsumo/data/list?type={0}'.format(type))
+
+@bp.route('/charts', methods=['GET'])
+def charts():
+    global type_list
+    prefixes= [ 'current', 'global' ]
+    type = request.args.get('type')
+    
+    return render_template('charts.html', 
+            type=type, type_list=type_list,
+            prefixes=copy.copy(prefixes), 
+            current_user=current_user)
 
 @bp.route('/', methods=['GET'])
 @bp.route('', methods=['GET'])
 def index():
-    prefixes= [ 'current', 'global' ]
-    return render_template('index.html', prefixes=copy.copy(prefixes), current_user=current_user)
+    return render_template('index.html', current_user=current_user)
