@@ -148,15 +148,15 @@ def current_start_end_period(heating_period):
 
     # TODO XXX FIX the heating period below : XXX FIXME TODO
 
-    # If we are after the heating period, display the previous period on the graph
-    if m < heating_period["start"]+3:
-        year=year-1
+    # # If we are after the heating period, display the previous period on the graph
+    # if m < heating_period["start"]+3:
+    #     year=year-1
 
-    # {}:0>2 } fill the string with leading Zero
-    start="{}-{:0>2}-01".format(date.today().year-1, heating_period["start"])
-    lastday=get_last_day_of_month(start)
-    end="{}-{:0>2}-{}".format(date.today().year, heating_period["end"], lastday)
-    return start, end
+    # # {}:0>2 } fill the string with leading Zero
+    # start="{}-{:0>2}-01".format(date.today().year-1, heating_period["start"])
+    # lastday=get_last_day_of_month(start)
+    # end="{}-{:0>2}-{}".format(date.today().year, heating_period["end"], lastday)
+    # return start, end
 
 def present_data(user_id, chartid, chart_type):
     # FIXME : load this from user profile
