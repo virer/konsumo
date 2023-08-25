@@ -111,6 +111,20 @@ class User(db.Model, UserMixin):
             return False
 
     @staticmethod
+    def get_raw_data(user_id, type):
+        sql = db.select(
+                User_Data.id, User_Data.date, User_Data.value1, User_Data.value2
+            ).order_by(User_Data.date).where(User_Data.type == type).where(User_Data.user_id == user_id)
+        
+        try:
+            rows = db.session.execute(sql)
+            return rows.all()
+        except Exception as e:
+            if DEBUG:
+                print(e)
+            return False
+        
+    @staticmethod
     def get_data_period(user_id, type, start, end, value2=False ):
         if value2:
             sql = db.select(
@@ -130,6 +144,12 @@ class User(db.Model, UserMixin):
             if DEBUG:
                 print(e)
             return False
+        
+    @staticmethod
+    def del_data(user_id, type, id ):
+        User_Data.query.filter(User_Data.user_id == user_id).filter(User_Data.type == type).filter(User_Data.id == id).delete()
+        db.session.commit()
+        db.session.close()
 
     @staticmethod
     def db_close():

@@ -45,7 +45,7 @@ def month_list(start, end):
 
     mylist2 = []
     for i in range(len(mylist)):
-        mylist2.append("01-{}".format(mylist[i]))
+        # mylist2.append("01-{}".format(mylist[i]))
         mylist2.append("15-{}".format(mylist[i]))
     
     return mylist2
@@ -56,8 +56,22 @@ def convert_date(dat):
 
 def construct_data(data, chart_type, no_transform=False):
     df = pd.DataFrame(data)
+    # if DEBUG:
+    #     print(df)
 
-    df.rename(columns = { df.columns[0]:'DATE', df.columns[1]:'CAPACITY' }, inplace=True)
+    if len(df.columns.values.tolist()) >= 3: 
+        df.rename(columns = { df.columns[0]:'DATE', df.columns[1]:'CAPACITY', df.columns[2]:'VALUE2' }, inplace=True)
+        if chart_type == 'electricity':
+            df['TOTAL']= df['CAPACITY'] + df['VALUE2']
+            df.drop('CAPACITY', inplace=True, axis=1)
+            df.rename(columns = {'TOTAL':'CAPACITY'}, inplace = True)
+        df.drop('VALUE2', inplace=True, axis=1)
+    else:
+        df.rename(columns = { df.columns[0]:'DATE', df.columns[1]:'CAPACITY' }, inplace=True)
+    
+    # if DEBUG:
+    #     print(df)
+
     # Here we get the CAPACITY column and we shift it up, 
     # so the "CAPACITY" in a row will put in the previous row
     series_shifted = df['CAPACITY'].shift()
@@ -99,6 +113,12 @@ def mean_avg(year, data, cal_list):
             day, month = cal_list[i+1].split('-')
             end   = '{}-{}-{}'.format(year, month, day)
 
+            # XXX To be validated
+            # Fill NaN value with previous one
+            data.fillna(method='ffill', inplace=True)
+            # Fill NaN value with next one
+            data.fillna(method='bfill', inplace=True)
+
             df2 = data.loc[( data['DATE'] >= start ) & ( data['DATE'] < end )]
             a=round(df2['DIFF'].mean(), 2)
 
@@ -121,6 +141,12 @@ def get_last_day_of_month(input, format='%Y-%m-%d'):
 def current_start_end_period(heating_period):
     m=date.today().month
     year=date.today().year
+    start="{}-{:0>2}-01".format(date.today().year-1, m)
+    lastday=get_last_day_of_month(start)
+    end="{}-{:0>2}-{}".format(date.today().year, m, lastday)
+    return start, end
+
+    # TODO XXX FIX the heating period below : XXX FIXME TODO
 
     # If we are after the heating period, display the previous period on the graph
     if m < heating_period["start"]+3:
@@ -134,14 +160,19 @@ def current_start_end_period(heating_period):
 
 def present_data(user_id, chartid, chart_type):
     # FIXME : load this from user profile
-    heating_period={ "start":9, "end":5 }
+    # if gazolie (but if elec this is non sens)
+    # heating_period={ "start":9, "end":5 }
+    heating_period={ "start":1, "end":12 }
 
     year = date.today().year 
     if chartid == "current":
         xaxis = 'type: "datetime "'
-        title  = "Current year consumption"
+        title  = "Past 12 month consumption"
         start, end = current_start_end_period(heating_period)
-        data = User().get_data_period(user_id, chart_type, start, end)
+        if DEBUG:
+            print("start/end: {0}/{1}".format(start,end))
+
+        data = User().get_data_period(user_id, chart_type, start, end, value2=True)
         data = construct_data(data, chart_type)
         series = [{ "name":"daily avg", "data": data }]
     elif chartid == "global":
@@ -149,6 +180,7 @@ def present_data(user_id, chartid, chart_type):
         series = []
 
         cal_list = month_list(heating_period["start"], heating_period["end"])
+        cal_list = list(dict.fromkeys(cal_list)) # remove duplicates
         xaxis = 'categories: {}'.format( cal_list )
 
         # List the 3 previous year
@@ -157,11 +189,12 @@ def present_data(user_id, chartid, chart_type):
                   (str(year-1), str(year)) ]
 
         for y, next_year in lines:
-            start = "{}-0{}-01".format(y,         heating_period["start"])
-            end   = "{}-0{}-31".format(next_year, heating_period["end"])
+            start = "{}-{:0>2}-01".format(y,         heating_period["start"])
+            end   = "{}-{:0>2}-31".format(next_year, heating_period["end"])
             data   = User().get_data_period(user_id, chart_type, 
                                 convert_date(start),
-                                convert_date(end) 
+                                convert_date(end),
+                                value2=True 
                             )
             if len(data) > 0:
                 data = construct_data(data, chart_type, no_transform=True)

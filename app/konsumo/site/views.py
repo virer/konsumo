@@ -7,6 +7,8 @@ import copy
 
 bp = Blueprint('konsumo', __name__, url_prefix='/konsumo')
 
+type_list = [ 'electricity', 'gaz', 'gaz_tank', 'gazoline', 'water', 'other_plus', 'other_minus' ]
+
 @login_required
 @bp.route('/regenerate-secret', methods=['POST'])
 def regenerate():
@@ -47,8 +49,9 @@ def location():
     return render_template('location.html', location=location, notif_msg=notif_msg)
 
 @login_required
-@bp.route('/form', methods=['GET','POST'])
-def form():
+@bp.route('/encoding', methods=['GET','POST'])
+def encoding():
+    global type_list
     if request.method=='POST':
         date   = request.form['date']
         type   = request.form['type']
@@ -59,15 +62,48 @@ def form():
         # date = datetime.strptime(date,'%d-%m-%Y').strftime('%Y-%m-%d')
 
         User.set_data(date, type, value1, value2, current_user.id)
-        return redirect('/konsumo/form?notif=saved')        
+        return redirect('/konsumo/encoding?notif=saved')        
+    
+    chart_type = request.args.get('type')
+    if chart_type == None:
+        chart_type = type_list[0]
+
     notif_msg = 'saved' == request.args.get('notif')
-    return render_template('form.html', notif_msg=notif_msg)
+    return render_template('encoding.html', 
+                    type_list=type_list, 
+                    chart_type=chart_type,                          
+                    notif_msg=notif_msg)
+
+@login_required
+@bp.route('/data/list', methods=['GET'])
+def data_list():
+    global type_list
+    type = request.args.get('type')
+    if type == None:
+        type = type_list[0]
+    data_list = User().get_raw_data(current_user.id, type)
+
+    return render_template('data_list.html', 
+                    type_list=type_list,
+                    type=type,
+                    data_list=data_list)
+
+@login_required
+@bp.route('/data/del', methods=['GET'])
+def data_del():
+    id = request.args.get('id')
+    type = request.args.get('type')
+
+    User().del_data(current_user.id, type, id)
+
+    return redirect('/konsumo/data/list?type={0}'.format(type))
 
 @bp.route('/charts', methods=['GET'])
 def charts():
+    global type_list
     prefixes= [ 'current', 'global' ]
     type = request.args.get('type')
-    type_list = [ 'electricity', 'gaz', 'gaz_tank', 'gazoline', 'water', 'other_plus', 'other_minus' ]
+    
     return render_template('charts.html', 
             type=type, type_list=type_list,
             prefixes=copy.copy(prefixes), 
