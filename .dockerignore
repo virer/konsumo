@@ -6,3 +6,5 @@ app/static/examples
 .git
 .github
 .gitignore
+startme.sh
+startdb.sh
