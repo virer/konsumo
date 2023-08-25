@@ -69,14 +69,14 @@ class User(db.Model, UserMixin):
     @staticmethod
     def regenerate_key(user_id):
         secret_key=_generate_key()
-        sql = db.update(User).where(user_id == user_id).values(secret_key=secret_key)
+        sql = db.update(User).where(User.user_id == user_id).values(secret_key=secret_key)
         db.session.execute(sql)
         db.session.commit()
         db.session.close()
 
     @staticmethod
     def set_location(user_id, location):
-        sql = db.update(User).where(user_id == user_id).values(location=location)
+        sql = db.update(User).where(User.user_id == user_id).values(location=location)
         db.session.execute(sql)
         db.session.commit()
         db.session.close()
