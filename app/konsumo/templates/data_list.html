@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %} Konsumo :: a home energy consumption chart {% endblock %}
+{% block head %}
+<meta http-equiv="refresh" content="300">
+<link rel="icon" href="data:;base64,iVBORw0KGgo=">
+<style>
+
+  .konsumo_chart {
+  max-width: 650px;
+  margin: 35px auto;
+}
+  
+</style>
+{% endblock %}
+{% block content %}
+
+
+
+{% if current_user.is_authenticated %}
+<div class="mb-3">
+    <form action="/konsumo/data/list" method="GET" role="form" onchange="submit()">
+    <div class="mb-4 row">
+        <label for="type" class="col-sm-3 col-form-label">Type</label>
+        <div class="col-sm-8">
+            <select name="type" class="form-select">
+            {% for type_l in type_list %}
+            <option {{ 'selected' if type_l == type }} value="{{ type_l }}">{{ type_l | replace('_',' ') }}</option>
+            {% endfor %}
+            </select>
+        </div>
+    </div>
+    </form>
+
+<!-- list data for specified data type -->
+<table border="1">
+    <tr>
+        <td><b>Date</b></td>
+        <td><b>Value 1</b></td>
+        <td><b>Value 2</b></td>
+        <td><b>Delete</b></td>
+    </tr>
+    
+    {%- for id, date, value1, value2 in data_list %}
+        <tr>
+            <td>{{ date }}</td>
+            <td>{{ value1 }}</td>
+            <td>{{ value2 }}</td>
+            <td><a href="/konsumo/data/del?type={{type}}&id={{ id }}">del</b></td> <!-- TODO add "X" icon here-->
+        </tr>
+    {% endfor %}
+</table>
+
+</div>
+{% endif %}
+
+{% endblock %}
