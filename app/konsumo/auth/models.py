@@ -1,15 +1,15 @@
 from flask_login import UserMixin
 from konsumo import db
-from random import choice
-import uuid
+import uuid, random
 import enum
 
 DEBUG = True
 
 def _generate_key():
     # Generate a secret key for API access
-    secret_key=str(uuid.uuid4())+str(uuid.uuid4())
-    return ''.join(choice((str.upper, str.lower))(c) for c in secret_key.replace('-',''))
+    secret_key=str(uuid.uuid4())+str(random.getrandbits(24))+str(uuid.uuid4())
+    return ''.join(random.choice((str.upper, str.lower))(c) for c in secret_key.replace('-',''))
+
 class User(db.Model, UserMixin):
     __tablename__ = "user"
     user_id    = db.Column(db.VARCHAR(34), primary_key=True)
