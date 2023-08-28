@@ -13,32 +13,31 @@
 </style>
 {% endblock %}
 {% block content %}
-
+<div class="d-flex justify-content-center"><h2>Konsumo</h2></div>
 
 
 {% if current_user.is_authenticated %}
-<div class="mb-3">
+<div>
   <div class="row">
-  <div class="col-5">
-    <div class="mb-4 row">
+  <div class="col-8">
+    <div class="row">
         <form action="/konsumo/data/list" method="GET" role="form" onchange="submit();">
-        <label for="type" class="col-sm-3 col-form-label">Type</label>
-        <div class="col-sm-8">
+        <label for="type" class="col-sm-2 col-form-label">Type</label>
+        <div class="row col-sm-3">
             <select name="type" class="form-select">
             {% for type_l in type_list %}
             <option {{ 'selected' if type_l == chart_type }} value="{{ type_l }}">{{ type_l | replace('_',' ') }}</option>
             {% endfor %}
             </select>
-            &nbsp; 
-            <a href="{{ url_for('konsumo.encoding') }}?type={{ chart_type }}">Add new value</a>
         </div>
         </form>
     </div>
+    &nbsp;<a href="{{ url_for('konsumo.encoding') }}?type={{ chart_type }}">Add new value</a>
   </div>
   </div>
  
  <div class="row">
-   <div class="col-6">   
+   <div class="col-8">   
     <table class="table table-striped" summary="List of encoded data">
     <tr>
         <th><b>Date</b></th>

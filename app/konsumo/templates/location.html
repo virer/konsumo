@@ -13,11 +13,11 @@
 </style>
 {% endblock %}
 {% block content %}
-
+<div class="d-flex justify-content-center"><h2>Konsumo</h2></div>
 
 {% if current_user.is_authenticated %}
 <form action="/konsumo/location" method="POST">
-    <input type="text" name="location" value="{{ location }}">
+    Current Location : <input type="text" name="location" value="{{ location }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="submit" value="Save">
     </form>
