@@ -82,17 +82,21 @@ def data_add():
 
     chart_type = request.form['type']
     if chart_type == None:
-        chart_type = type_list[0]
+            chart_type = type_list[0]
 
-    date       = request.form['date']
-    value1     = request.form['value1']
-    value2     = request.form['value2']+"" # ALLOWED NULL VALUE HERE
+    if chart_type in type_list:
+        
+        date       = request.form['date']
+        value1     = request.form['value1']
+        value2     = request.form['value2']+"" # ALLOWED NULL VALUE HERE
 
-    # Convert date from DD-MM-YYYY to YYYY-MM-DD
-    # date = datetime.strptime(date,'%d-%m-%Y').strftime('%Y-%m-%d')
+        # Convert date from DD-MM-YYYY to YYYY-MM-DD
+        # date = datetime.strptime(date,'%d-%m-%Y').strftime('%Y-%m-%d')
 
-    User.set_data(date, chart_type, value1, value2, current_user.id)
-    return redirect('/konsumo/encoding?notif=saved&type={0}'.format(chart_type))        
+        User.set_data(date, chart_type, value1, value2, current_user.id)
+        return redirect('/konsumo/encoding?notif=saved&type={0}'.format(chart_type))
+    else:
+        return redirect('/konsumo')    
     
 
 @login_required
