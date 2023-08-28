@@ -17,9 +17,17 @@ def regenerate():
 
 @bp.route('/profile', methods=['GET'])
 def profile():
-    location, access_key, secret_key = User.get_info(current_user.id)
-    notif_msg = 'saved' == request.args.get('notif') 
-    return render_template('profile.html', notif_msg=notif_msg, access_key=access_key, secret_key=secret_key)
+    chart_type = type_list[0]
+    try:
+        _, access_key, secret_key = User.get_info(current_user.id)
+        notif_msg = 'saved' == request.args.get('notif') 
+        return render_template('profile.html', chart_type=chart_type,
+                               notif_msg=notif_msg, 
+                               access_key=access_key, 
+                               secret_key=secret_key)
+    except Exception as e:
+        print("Profile exception : {0}".format(e))
+        return redirect('/konsumo/')
 
 @login_required
 @bp.route('/chart/<prefix>', methods=['GET'])
@@ -28,7 +36,7 @@ def chart(prefix):
     title, series, xaxis = present_data(current_user.id, prefix, chart_type)
 
     resp = make_response(render_template('chart.js', 
-                    chart_type=copy.copy(chart_type),
+                    chart_type=chart_type,
                     prefix=copy.copy(prefix), 
                     title=copy.copy(title),
                     series=copy.copy(series),
@@ -40,29 +48,23 @@ def chart(prefix):
 @login_required
 @bp.route('/location', methods=['GET','POST'])
 def location():
+    chart_type = type_list[0]
     if request.method=='POST':
         location = request.form['location']
         User(current_user.id).set_location(current_user.id, location)
         return redirect('/konsumo/location?notif=saved')
-    location, access_key, secret_key = User.get_info(current_user.id)
+    location, _, _ = User.get_info(current_user.id)
     notif_msg = 'saved' == request.args.get('notif')
-    return render_template('location.html', location=location, notif_msg=notif_msg)
+    return render_template('location.html', 
+                           chart_type=chart_type,
+                           location=location, 
+                           notif_msg=notif_msg)
 
 @login_required
-@bp.route('/encoding', methods=['GET','POST'])
+@bp.route('/encoding', methods=['GET'])
 def encoding():
     global type_list
     chart_type = request.args.get('type')
-    if request.method=='POST':
-        date   = request.form['date']
-        value1 = request.form['value1']
-        value2 = request.form['value2']+"" # ALLOWED NULL VALUE HERE
-
-        # Convert date from DD-MM-YYYY to YYYY-MM-DD
-        # date = datetime.strptime(date,'%d-%m-%Y').strftime('%Y-%m-%d')
-
-        User.set_data(date, chart_type, value1, value2, current_user.id)
-        return redirect('/konsumo/encoding?notif=saved')        
     
     if chart_type == None:
         chart_type = type_list[0]
@@ -72,6 +74,30 @@ def encoding():
                     type_list=type_list, 
                     chart_type=chart_type,                          
                     notif_msg=notif_msg)
+
+@login_required
+@bp.route('/data/add', methods=['POST'])
+def data_add():
+    global type_list
+
+    chart_type = request.form['type']
+    if chart_type == None:
+            chart_type = type_list[0]
+
+    if chart_type in type_list:
+        
+        date       = request.form['date']
+        value1     = request.form['value1']
+        value2     = request.form['value2']+"" # ALLOWED NULL VALUE HERE
+
+        # Convert date from DD-MM-YYYY to YYYY-MM-DD
+        # date = datetime.strptime(date,'%d-%m-%Y').strftime('%Y-%m-%d')
+
+        User.set_data(date, chart_type, value1, value2, current_user.id)
+        return redirect('/konsumo/encoding?notif=saved&type={0}'.format(chart_type))
+    else:
+        return redirect('/konsumo')    
+    
 
 @login_required
 @bp.route('/data/list', methods=['GET'])
@@ -84,14 +110,14 @@ def data_list():
 
     return render_template('data_list.html', 
                     type_list=type_list,
-                    type=chart_type,
+                    chart_type=chart_type,
                     data_list=data_list)
 
 @login_required
-@bp.route('/data/del', methods=['GET'])
+@bp.route('/data/del', methods=['POST'])
 def data_del():
-    id = request.args.get('id')
-    chart_type = request.args.get('type')
+    id = request.form['id']
+    chart_type = request.form['type']
 
     if chart_type in type_list:
         User().del_data(current_user.id, chart_type, id)
@@ -107,11 +133,15 @@ def charts():
     chart_type = request.args.get('type')
     
     return render_template('charts.html', 
-            type=chart_type, type_list=type_list,
+            chart_type=chart_type, 
+            type_list=type_list,
             prefixes=copy.copy(prefixes), 
             current_user=current_user)
 
 @bp.route('/', methods=['GET'])
 @bp.route('', methods=['GET'])
 def index():
-    return render_template('index.html', current_user=current_user)
+    chart_type = type_list[0]
+    return render_template('index.html', 
+                           chart_type=chart_type,
+                           current_user=current_user)

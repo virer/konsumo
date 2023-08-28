@@ -12,14 +12,15 @@
   
 </style>
 {% endblock %}
+
 {% block content %}
-<center><h2>Konsumo</h2></center>
+<div class="d-flex justify-content-center"><h2>Konsumo</h2></div>
 {% if current_user.is_authenticated %}
 
 <form method="GET" action="/konsumo/charts" name="ChartTypeForm">
-  <select name="type" onchange="ChartTypeForm.submit()">
+  <select name="type" class="form-select" onchange="ChartTypeForm.submit()">
     {% for type_l in type_list %}
-    <option {{ 'selected' if type_l == type }} value="{{ type_l }}">{{ type_l | replace('_',' ') }}</option>
+    <option {{ 'selected' if type_l == chart_type }} value="{{ type_l }}">{{ type_l | replace('_',' ') }}</option>
     {% endfor %}
   </select>
 </form>
@@ -29,7 +30,7 @@
 {% endfor %}
 
 {% for prefix in prefixes %}
-  <script src="/konsumo/chart/{{ prefix }}?type={{ type }}"></script>
+  <script src="/konsumo/chart/{{ prefix }}?type={{ chart_type }}"></script>
 {% endfor %}
 
 {% endif %}

@@ -13,21 +13,21 @@
 </style>
 {% endblock %}
 {% block content %}
-
+<div class="d-flex justify-content-center"><h2>Konsumo</h2></div>
 
 
 {% if current_user.is_authenticated %}
-<div class="mb-3">
-
-<form action="/konsumo/encoding" method="POST" role="form">
+<div class="mb">
+<p><br></p>
+<form action="/konsumo/data/add" method="POST" role="form">
 <div class="row">
- <div class="col-5">
+ <div class="col">
     <div class="mb-4 row">
         <label for="type" class="col-sm-3 col-form-label">Type</label>
         <div class="col-sm-8">
             <select name="type" class="form-select">
             {% for type_l in type_list %}
-            <option {{ 'selected' if type_l == type }} value="{{ type_l }}">{{ type_l | replace('_',' ') }}</option>
+            <option {{ 'selected' if type_l == chart_type }} value="{{ type_l }}">{{ type_l | replace('_',' ') }}</option>
             {% endfor %}
             </select>
         </div>
@@ -50,10 +50,13 @@
             <input type="text" name="value2" value="" class="form-control">
         </div>
     </div>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="submit" value="Save" class="btn btn-primary col-sm-3"><br>
  </div>
 </div>
 </form>
+<br>
+<br>
 <a href="/konsumo/data/list?type={{ chart_type }}">Check encoded data</a>
 
 </div>

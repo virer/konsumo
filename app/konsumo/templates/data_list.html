@@ -13,30 +13,33 @@
 </style>
 {% endblock %}
 {% block content %}
-
+<div class="d-flex justify-content-center"><h2>Konsumo</h2></div>
 
 
 {% if current_user.is_authenticated %}
-<div class="mb-3">
+<div>
   <div class="row">
-  <div class="col-5">
-    <div class="mb-4 row">
-        <form action="/konsumo/data/list" method="GET" role="form" onchange="submit();">
-        <label for="type" class="col-sm-3 col-form-label">Type</label>
-        <div class="col-sm-8">
-            <select name="type" class="form-select">
+  <div class="col">
+    <div class="row">
+        <form class="row mb-4" action="/konsumo/data/list" method="GET" role="form" onchange="submit();">
+        <div class="d-inline-flex align-items-center">
+          <label for="chart_type" class="form-label">Type&nbsp;</label>        
+          <select name="type" id="chart_type" class="form-select w-50">
             {% for type_l in type_list %}
-            <option {{ 'selected' if type_l == type }} value="{{ type_l }}">{{ type_l | replace('_',' ') }}</option>
+            <option {{ 'selected' if type_l == chart_type }} value="{{ type_l }}">{{ type_l | replace('_',' ') }}</option>
             {% endfor %}
-            </select>
+          </select>
+          <a href="{{ url_for('konsumo.encoding') }}?type={{ chart_type }}" class="btn btn-primary">Add new value</a>
         </div>
+        
         </form>
     </div>
+    
   </div>
   </div>
  
  <div class="row">
-   <div class="col-6">   
+   <div class="col">   
     <table class="table table-striped" summary="List of encoded data">
     <tr>
         <th><b>Date</b></th>
@@ -50,7 +53,14 @@
             <td>{{ date }}</td>
             <td>{{ value1 }}</td>
             <td>{{ value2 }}</td>
-            <td><a href="/konsumo/data/del?type={{type}}&id={{ id }}" class="btn btn-labeled btn-danger"><span class="btn-label"><i class="fa fa-trash"></i></span>del</td> <!-- TODO add "X" icon here-->
+            <td>
+              <form method="post" action="{{ url_for('konsumo.data_del') }}">
+              <input type="hidden" name="id" value="{{ id }}">
+              <input type="hidden" name="type" value="{{ chart_type }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" name="delete" class="btn btn-labeled btn-danger btn-sm"><span class="btn-label"><i class="fa fa-trash"></i></span> Delete</button>
+              </form>
+            </td>
         </tr>
     {% endfor %}
     </table>
