@@ -59,6 +59,11 @@ def construct_data(data, chart_type, no_transform=False):
     # if DEBUG:
     #     print(df)
 
+    if len(df.index) <= 0:
+        if no_transform:
+            return df
+        return df.to_dict('records')
+
     if len(df.columns.values.tolist()) >= 3: 
         df.rename(columns = { df.columns[0]:'DATE', df.columns[1]:'CAPACITY', df.columns[2]:'VALUE2' }, inplace=True)
         if chart_type == 'electricity':
