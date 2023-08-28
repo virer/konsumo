@@ -119,15 +119,13 @@ def data_list():
 @login_required
 @bp.route('/data/del', methods=['POST'])
 def data_del():
-    id = request.form['id']
     chart_type = request.form['type']
+    if chart_type not in type_list: abort(400)
+    
+    id = request.form['id']
+    User().del_data(current_user.id, chart_type, id)
 
-    if chart_type in type_list:
-        User().del_data(current_user.id, chart_type, id)
-
-        return redirect('/konsumo/data/list?type={0}'.format(chart_type))
-    else:
-        return redirect('/konsumo')
+    return redirect('/konsumo/data/list?type={0}'.format(chart_type))
 
 @bp.route('/charts', methods=['GET'])
 def charts():

@@ -83,9 +83,9 @@ class User(db.Model, UserMixin):
     @staticmethod
     def set_data(date, type, value1, value2, user_id):
         if len(value2) > 0 :
-            sql = db.insert(User_Data).values(date=date, type=type, value1=value1, value2=value2, user_id=user_id)
+            sql = db.insert(UserData).values(date=date, type=type, value1=value1, value2=value2, user_id=user_id)
         else :
-            sql = db.insert(User_Data).values(date=date, type=type, value1=value1, user_id=user_id)
+            sql = db.insert(UserData).values(date=date, type=type, value1=value1, user_id=user_id)
         db.session.execute(sql)
         db.session.commit()
         db.session.close()
@@ -94,12 +94,12 @@ class User(db.Model, UserMixin):
     def get_data(user_id, type, value2=False):
         if value2:
             sql = db.select(
-                    User_Data.date, User_Data.value1, User_Data.value2
-                ).order_by(User_Data.date).where(User_Data.type == type).where(User_Data.user_id == user_id)
+                    UserData.date, UserData.value1, UserData.value2
+                ).order_by(UserData.date).where(UserData.type == type).where(UserData.user_id == user_id)
         else:
             sql = db.select(
-                    User_Data.date, User_Data.value1
-                ).order_by(User_Data.date).where(User_Data.type == type).where(User_Data.user_id == user_id)
+                    UserData.date, UserData.value1
+                ).order_by(UserData.date).where(UserData.type == type).where(UserData.user_id == user_id)
         
         try:
             rows = db.session.execute(sql)
@@ -112,8 +112,8 @@ class User(db.Model, UserMixin):
     @staticmethod
     def get_raw_data(user_id, type):
         sql = db.select(
-                User_Data.id, User_Data.date, User_Data.value1, User_Data.value2
-            ).order_by(User_Data.date).where(User_Data.type == type).where(User_Data.user_id == user_id)
+                UserData.id, UserData.date, UserData.value1, UserData.value2
+            ).order_by(UserData.date).where(UserData.type == type).where(UserData.user_id == user_id)
         
         try:
             rows = db.session.execute(sql)
@@ -127,14 +127,14 @@ class User(db.Model, UserMixin):
     def get_data_period(user_id, type, start, end, value2=False ):
         if value2:
             sql = db.select(
-                    User_Data.date, User_Data.value1, User_Data.value2
-                ).order_by(User_Data.date).where(User_Data.type == type).where(User_Data.user_id == user_id
-                ).filter(User_Data.date.between(start, end))
+                    UserData.date, UserData.value1, UserData.value2
+                ).order_by(UserData.date).where(UserData.type == type).where(UserData.user_id == user_id
+                ).filter(UserData.date.between(start, end))
         else:
             sql = db.select(
-                    User_Data.date, User_Data.value1
-                ).order_by(User_Data.date).where(User_Data.type == type).where(User_Data.user_id == user_id
-                ).filter(User_Data.date.between(start, end))
+                    UserData.date, UserData.value1
+                ).order_by(UserData.date).where(UserData.type == type).where(UserData.user_id == user_id
+                ).filter(UserData.date.between(start, end))
         
         try:
             rows = db.session.execute(sql)
@@ -146,7 +146,7 @@ class User(db.Model, UserMixin):
         
     @staticmethod
     def del_data(user_id, type, id ):
-        User_Data.query.filter(User_Data.user_id == user_id).filter(User_Data.type == type).filter(User_Data.id == id).delete()
+        UserData.query.filter(UserData.user_id == user_id).filter(UserData.type == type).filter(UserData.id == id).delete()
         db.session.commit()
         db.session.close()
 
@@ -163,7 +163,7 @@ class TypeEnum(enum.Enum):
     other_plus=6
     other_minus=7
 
-class User_Data(db.Model):
+class UserData(db.Model):
     __tablename__ = "user_data"
 
     class Meta:
