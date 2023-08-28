@@ -158,11 +158,19 @@ def current_start_end_period(heating_period):
     # end="{}-{:0>2}-{}".format(date.today().year, heating_period["end"], lastday)
     # return start, end
 
+def get_heating_period():
+    # FIXME : load this from user profile
+    # if gazolie (but if elec this is non sens)
+    # heating_period={ "start":9, "end":5 }
+    heating_period={ "start": date.today().month, "end": (date.today().month + 11) % 12 or 12 }
+    return heating_period
+
+
 def present_data(user_id, chartid, chart_type):
     # FIXME : load this from user profile
     # if gazolie (but if elec this is non sens)
     # heating_period={ "start":9, "end":5 }
-    heating_period={ "start":1, "end":12 }
+    heating_period=get_heating_period()
 
     year = date.today().year 
     if chartid == "current":
