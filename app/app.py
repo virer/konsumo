@@ -1,6 +1,7 @@
 """App entry point."""
 from flask import redirect
 from konsumo import create_app
+import logging
 import os
 app = create_app()
 
@@ -16,5 +17,8 @@ def root():
     return redirect("/konsumo", code=302)
 
 if __name__ == "__main__":
+    gunicorn_logger = logging.getLogger('gunicorn.error')
+    app.logger.handlers = gunicorn_logger.handlers
+    app.logger.setLevel(gunicorn_logger.level)
     # SSL Mode
     app.run(host=HOST, port=int(PORT), ssl_context=(SSL_CRT, SSL_KEY), debug=DEBUG)

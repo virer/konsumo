@@ -1,6 +1,6 @@
 # Konsumo
 
-## a little home energy consumption chart OpenSource projet
+## a little home energy consumption chart OpenSource project
 
 This project is based on Python, Flask, ApexCharts (apexcharts.com), SQLAlchemy, Pandas
 
