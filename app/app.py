@@ -9,6 +9,7 @@ HOST   = os.getenv("HOST", "127.0.0.1")
 PORT   = os.getenv("PORT", "8080")
 SSL_CRT= os.getenv("SSL_CRT", "/ssl/cert.pem")
 SSL_KEY= os.getenv("SSL_KEY", "/ssl/key.pem")
+csrf = None
 
 @app.route('/')
 def root():

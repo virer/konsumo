@@ -26,9 +26,11 @@
         <div class="col-sm-8">
             <select name="type" class="form-select">
             {% for type_l in type_list %}
-            <option {{ 'selected' if type_l == type }} value="{{ type_l }}">{{ type_l | replace('_',' ') }}</option>
+            <option {{ 'selected' if type_l == chart_type }} value="{{ type_l }}">{{ type_l | replace('_',' ') }}</option>
             {% endfor %}
             </select>
+            &nbsp; 
+            <a href="{{ url_for('konsumo.encoding') }}?type={{ chart_type }}">Add new value</a>
         </div>
         </form>
     </div>
@@ -50,7 +52,14 @@
             <td>{{ date }}</td>
             <td>{{ value1 }}</td>
             <td>{{ value2 }}</td>
-            <td><a href="/konsumo/data/del?type={{type}}&id={{ id }}" class="btn btn-labeled btn-danger"><span class="btn-label"><i class="fa fa-trash"></i></span>del</td> <!-- TODO add "X" icon here-->
+            <td>
+              <form method="post" action="{{ url_for('konsumo.data_del') }}">
+              <input type="hidden" name="id" value="{{ id }}">
+              <input type="hidden" name="type" value="{{ chart_type }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" name="delete" class="btn btn-labeled btn-danger btn-sm"><span class="btn-label"><i class="fa fa-trash"></i></span> Delete</button>
+              </form>
+            </td>
         </tr>
     {% endfor %}
     </table>

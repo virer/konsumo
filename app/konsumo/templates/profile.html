@@ -25,7 +25,10 @@
 
     Access Key <input type="text" disabled value="{{ access_key }}" size="50"><br>
     Secret Key <input type="text" disabled value="{{ secret_key }}" size="50"><br>
-    <form action="/konsumo/regenerate-secret" method="POST"><input type="submit" value="Regenerate" class="btn btn-secondary"></form>
+    <form action="/konsumo/regenerate-secret" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="submit" value="Regenerate" class="btn btn-secondary">
+    </form>
   </div>
 {% else %}
   <center><a class="button" href="/konsumo/auth/login">Google Login</a></center>

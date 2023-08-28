@@ -13,7 +13,7 @@
       {% if not current_user.is_authenticated %}
       <li><a class="dropdown-item" href="/konsumo/auth/login">Login</a></li>
       {% else %}
-      <li><a class="dropdown-item" href="/konsumo/charts?type=electricity">Charts</a></li>
+      <li><a class="dropdown-item" href="/konsumo/charts?type={{ chart_type }}">Charts</a></li>
       <li><a class="dropdown-item" href="/konsumo/profile">Profile</a></li>
       <li><a class="dropdown-item" href="/konsumo/location">Location</a></li>
       <li><a class="dropdown-item" href="/konsumo/encoding">Encoding</a></li>

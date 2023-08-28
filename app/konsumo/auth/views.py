@@ -101,7 +101,8 @@ def callback():
 def logout():
     try:
         logout_user()
-    except:
+    except Exception as e:
+        print("Logout exception: {0}".format(e))
         pass
     return redirect("/konsumo/profile")
 

@@ -7,6 +7,7 @@ bind = "{}:{}".format(host, port)
 log_config = "/app/logger.ini"
 workers = multiprocessing.cpu_count() + 1
 
+# Example of usage
 # certfile = '/etc/letsencrypt/live/example.com/fullchain.pem'
 # keyfile = '/etc/letsencrypt/live/example.com/privkey.pem'
 certfile= os.getenv("SSL_CRT", "/ssl/cert.pem")

@@ -18,6 +18,7 @@
 {% if current_user.is_authenticated %}
 <form action="/konsumo/location" method="POST">
     <input type="text" name="location" value="{{ location }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="submit" value="Save">
     </form>
 {% endif %}

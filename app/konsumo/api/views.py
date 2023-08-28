@@ -2,6 +2,7 @@ from flask import render_template, request, jsonify, abort
 from flask_httpauth import HTTPBasicAuth
 from konsumo.auth.models import User
 from flask import Blueprint, request
+
 bp = Blueprint('api', __name__, url_prefix='/konsumo/api')
 
 auth = HTTPBasicAuth()
@@ -10,7 +11,7 @@ auth = HTTPBasicAuth()
 def verify_password(username, password):
     try:
         if username.isdigit():
-            location, access_key, secret_key = User.get_info(username)
+            _, _, secret_key = User.get_info(username)
             if password == secret_key:
                 return username
     except:
