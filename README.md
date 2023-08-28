@@ -18,7 +18,7 @@ openssl req -x509 -newkey rsa:4096 -keyout key.pem -nodes -out cert.pem -sha256 
 ```
 
 ### Badges
-![CI-PROD workflow](https://github.com/github/docs/actions/workflows/main.yml/badge.svg)    [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=virer_konsumo&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=virer_konsumo)
+![CI-PROD workflow](https://github.com/virer/konsumo/actions/workflows/main.yml/badge.svg)    [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=virer_konsumo&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=virer_konsumo)
 
 ### Source of inspiration for the login part:
 Google Login tutorial https://realpython.com/flask-google-login/
