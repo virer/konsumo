@@ -33,6 +33,8 @@ def profile():
 @bp.route('/chart/<prefix>', methods=['GET'])
 def chart(prefix):
     chart_type = request.args.get('type')
+    if chart_type not in type_list: abort(400)
+
     title, series, xaxis = present_data(current_user.id, prefix, chart_type)
 
     resp = make_response(render_template('chart.js', 
@@ -68,8 +70,10 @@ def encoding():
     
     if chart_type == None:
         chart_type = type_list[0]
+    if chart_type not in type_list: abort(400)
 
     notif_msg = 'saved' == request.args.get('notif')
+    
     return render_template('encoding.html', 
                     type_list=type_list, 
                     chart_type=chart_type,                          
@@ -84,20 +88,17 @@ def data_add():
     if chart_type == None:
             chart_type = type_list[0]
 
-    if chart_type in type_list:
+    if chart_type not in type_list: abort(400)
         
-        date       = request.form['date']
-        value1     = request.form['value1']
-        value2     = request.form['value2']+"" # ALLOWED NULL VALUE HERE
+    date       = request.form['date']
+    value1     = request.form['value1']
+    value2     = request.form['value2']+"" # ALLOWED NULL VALUE HERE
 
-        # Convert date from DD-MM-YYYY to YYYY-MM-DD
-        # date = datetime.strptime(date,'%d-%m-%Y').strftime('%Y-%m-%d')
+    # Convert date from DD-MM-YYYY to YYYY-MM-DD
+    # date = datetime.strptime(date,'%d-%m-%Y').strftime('%Y-%m-%d')
 
-        User.set_data(date, chart_type, value1, value2, current_user.id)
-        return redirect('/konsumo/encoding?notif=saved&type={0}'.format(chart_type))
-    else:
-        return redirect('/konsumo')    
-    
+    User.set_data(date, chart_type, value1, value2, current_user.id)
+    return redirect('/konsumo/encoding?notif=saved&type={0}'.format(chart_type))
 
 @login_required
 @bp.route('/data/list', methods=['GET'])
@@ -106,6 +107,8 @@ def data_list():
     chart_type = request.args.get('type')
     if chart_type == None:
         chart_type = type_list[0]
+
+    if chart_type not in type_list: abort(400)
     data_list = User().get_raw_data(current_user.id, chart_type)
 
     return render_template('data_list.html', 
@@ -131,7 +134,8 @@ def charts():
     global type_list
     prefixes= [ 'current', 'global' ]
     chart_type = request.args.get('type')
-    
+    if chart_type not in type_list: abort(400)
+
     return render_template('charts.html', 
             chart_type=chart_type, 
             type_list=type_list,
