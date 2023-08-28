@@ -121,9 +121,9 @@ def data_list():
 def data_del():
     chart_type = request.form['type']
     if chart_type not in type_list: abort(400)
-    
-    id = request.form['id']
-    User().del_data(current_user.id, chart_type, id)
+
+    row_id = request.form['id']
+    User().del_data(current_user.id, chart_type, row_id)
 
     return redirect('/konsumo/data/list?type={0}'.format(chart_type))
 
