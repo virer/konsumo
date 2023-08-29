@@ -1,0 +1,9 @@
+Konsumo privacy notes.
+----------------------
+
+Your email address is used to identify you on the service via OAUTH and stored in the database.
+Future work may avoid that and just store the hash(TODO)
+
+Your email address will not be shared, nor sell to anyone.
+
+Cookies are only used for identification and authentification purpose.
