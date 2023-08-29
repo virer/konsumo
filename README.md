@@ -30,16 +30,30 @@ $ podman run -it docker.io/scaps/konsumo:<tag> /usr/local/bin/flask init-db
 
 ### Parameters, default value and possible usage
 
-> HOST=0.0.0.0
-> PORT=8080
-> GOOGLE_CLIENT_ID=
-> GOOGLE_CLIENT_SECRET=
-> DBHOST=127.0.0.1
-> DBUSER=root
-> DBPASS=password
-> DBNAME=konsumo
-> SSL_CRT=/ssl/cert.pem
-> SSL_KEY=/ssl/key.pem
+Listen connection on
+- HOST=0.0.0.0
+
+- PORT=8080
+
+Google credentials settings for OAuth
+- GOOGLE_CLIENT_ID=
+
+- GOOGLE_CLIENT_SECRET=
+
+Persistent database settings
+- DBHOST=127.0.0.1
+
+- DBUSER=root
+
+- DBPASS=password
+
+- DBNAME=konsumo
+
+SSL Certificate settings
+- SSL_CRT=/ssl/cert.pem
+
+- SSL_KEY=/ssl/key.pem
+
 
 Possible usage :
 ```console
