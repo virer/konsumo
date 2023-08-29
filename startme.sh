@@ -5,7 +5,7 @@
 
 # podman build . -t konsumo
 
-podman run --rm $KONSUMO_DEV -v /ssl:/ssl \
+podman run --rm $KONSUMO_DEV -v /opt/konsumo/ssl:/ssl \
     --name konsumo \
     --network host -it \
     -e HOST=0.0.0.0  \
