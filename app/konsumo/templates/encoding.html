@@ -36,19 +36,19 @@
     <div class="mb-4 row">
         <label for="date" class="col-sm-3 col-form-label">Date</label>
         <div class="col-sm-8">
-            <input type="date" name="date"   value="" class="form-control">
+            <input type="date" name="date" id="date" value="" class="form-control">
         </div>
     </div>
     <div class="mb-4 row">
         <label for="value1" class="col-sm-3 col-form-label">Value 1</label>
         <div class="col-sm-8">
-            <input type="text" name="value1" value="" class="form-control">
+            <input type="number" name="value1" value="" class="form-control" pattern="[0-9]*" inputmode="numeric">
         </div>
     </div>
     <div class="mb-4 row">
         <label for="value2" class="col-sm-3 col-form-label">Value 2</label>
         <div class="col-sm-8">
-            <input type="text" name="value2" value="" class="form-control">
+            <input type="number" name="value2" value="" class="form-control" pattern="[0-9]*" inputmode="numeric" novalidate>
         </div>
     </div>
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -61,6 +61,9 @@
 <a href="/konsumo/data/list?type={{ chart_type }}">Check encoded data</a>
 
 </div>
+<script>
+    document.getElementById("date").valueAsDate = new Date();
+</script>
 {% endif %}
 
 {% endblock %}

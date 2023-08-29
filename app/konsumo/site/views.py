@@ -73,7 +73,7 @@ def encoding():
     if chart_type not in type_list: abort(400)
 
     notif_msg = 'saved' == request.args.get('notif')
-    
+
     return render_template('encoding.html', 
                     type_list=type_list, 
                     chart_type=chart_type,                          

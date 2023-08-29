@@ -20,7 +20,12 @@ mkdir -p /opt/konsumo/ssl && openssl req -x509 -newkey rsa:4096 -keyout /opt/kon
 Then start a mariadb container
 ```console
 podman pull docker.io/mariadb:10.11
-podman run --rm -d --name mariadb -v /data/mariadb/:/var/lib/mysql/ --network host -e MARIADB_ROOT_PASSWORD="MyVerySecretPassword" mariadb:10.11
+podman run --rm -d --name mariadb -v /data/mariadb/:/var/lib/mysql/ --network host \
+    -e MARIADB_ROOT_PASSWORD="MyVerySecretPassword" \
+    -e MARIADB_DATABASE="konsumo" \
+    -e MARIADB_USER="konsumo" \
+    -e MARIADB_PASSWORD="MySecretPassword." \
+    mariadb:10.11
 ```
 
 also initialize the DB using the following commands:
