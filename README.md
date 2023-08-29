@@ -15,7 +15,13 @@ So here is a quick self-signed command example :
 mkdir -p /opt/konsumo/ssl && openssl req -x509 -newkey rsa:4096 -keyout /opt/konsumo/ssl/key.pem -nodes -out /opt/konsumo/ssl/cert.pem -sha256 -days 3650 -subj='/CN=konsumo/'
 ```
 
-and also initialize the DB using the following:
+Then start a mariadb container
+```console
+podman pull docker.io/mariadb:10.11
+podman run --rm -d --name mariadb -v /data/mariadb/:/var/lib/mysql/ --network host -e MARIADB_ROOT_PASSWORD="MyVerySecretPassword" mariadb:10.11
+```
+
+also initialize the DB using the following:
 ```console
 $ podman pull docker.io/scaps/konsumo:<tag>
 $ podman run -it docker.io/scaps/konsumo:<tag> /usr/local/bin/flask init-db
