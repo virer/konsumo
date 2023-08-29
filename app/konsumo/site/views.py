@@ -75,7 +75,6 @@ def encoding():
     notif_msg = 'saved' == request.args.get('notif')
 
     return render_template('encoding.html', 
-                    today=date.today().strftime('%d/%m/%Y'),
                     type_list=type_list, 
                     chart_type=chart_type,                          
                     notif_msg=notif_msg)
