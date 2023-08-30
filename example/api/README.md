@@ -13,3 +13,9 @@ $ curl -k -X POST -H 'Content-Type: application/json' -d '{ "date":"2023-03-16",
 
 $ curl -k -X POST -H 'Content-Type: application/json' -d @bundle.json https://$KONSUMO_USR:$KONSUMO_PWD@127.0.0.1:8080/konsumo/api/addbundle/gazoline
 ```
+
+To point to the demo site
+```console
+$ curl -k -X POST -H 'Content-Type: application/json' -d @example/tools/gazoline.json https://$KONSUMO_USR:$KONSUMO_PWD@konsumo.virer.net/konsumo/api/addbundle/gazoline
+$ curl -k -X POST -H 'Content-Type: application/json' -d @example/tools/water.json https://$KONSUMO_USR:$KONSUMO_PWD@konsumo.virer.net/konsumo/api/addbundle/water
+```
