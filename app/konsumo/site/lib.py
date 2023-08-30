@@ -108,16 +108,16 @@ def construct_data(data, chart_type, no_transform=False):
 
 def mean_avg_date_range(cal_list, i, year, large=False):
     day, month = cal_list[i].split('-')
-    start = '{}-{}-{}'.format(year, month, day)
     if large:
-        start = '{}-{}-{}'.format(year, month, "01")
+        day = "01"
+    start = '{}-{}-{}'.format(year, month, day)
 
     if month == 'Dec': 
         year = str(int(year)+1)
     day, month = cal_list[i+1].split('-')
-    end   = '{}-{}-{}'.format(year, month, day)
     if large:
-        end   = '{}-{}-{}'.format(year, month, "28")
+        day = "28"
+    end   = '{}-{}-{}'.format(year, month, day)
 
     return start, end, year
 
