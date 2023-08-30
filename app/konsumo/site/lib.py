@@ -106,32 +106,46 @@ def construct_data(data, chart_type, no_transform=False):
     
         return df.to_dict('records')
 
+def mean_avg_date_range(cal_list, i, year, large=False):
+    day, month = cal_list[i].split('-')
+    if large:
+        day = "01"
+    start = '{}-{}-{}'.format(year, month, day)
+
+    if month == 'Dec': 
+        year = str(int(year)+1)
+    day, month = cal_list[i+1].split('-')
+    if large:
+        day = "28"
+    end   = '{}-{}-{}'.format(year, month, day)
+
+    return start, end, year
+
 def mean_avg(year, data, cal_list):
+    # Fill NaN value with previous one
+    data.fillna(method='ffill', inplace=True)
+    # Fill NaN value with next one
+    data.fillna(method='bfill', inplace=True)
+    
     ret = []
     for i in range(len(cal_list)):
         if i+1 < len(cal_list):
-            day, month = cal_list[i].split('-')
-            start = '{}-{}-{}'.format(year, month, day)
-
-            if cal_list[i] == '15-Dec': 
-                year = str(int(year)+1)
-            day, month = cal_list[i+1].split('-')
-            end   = '{}-{}-{}'.format(year, month, day)
-
-            # XXX To be validated
-            # Fill NaN value with previous one
-            data.fillna(method='ffill', inplace=True)
-            # Fill NaN value with next one
-            data.fillna(method='bfill', inplace=True)
+            start, end, year = mean_avg_date_range(cal_list, i, year)
 
             df2 = data.loc[( data['DATE'] >= start ) & ( data['DATE'] < end )]
             a=round(df2['DIFF'].mean(), 2)
-
-            # Replace Pandas null value(NaN) with null -> for Javascript
+            
+            # Select larger time frame to avoid null value by getting average/mean value in between
             if str(a) == "nan": 
+                start, end, year = mean_avg_date_range(cal_list, i, year, large=True)
+                df2 = data.loc[( data['DATE'] >= start ) & ( data['DATE'] < end )]
+                a=round(df2['DIFF'].mean(), 2)
+    
+            # Replace Pandas null value(NaN) with null -> for Javascript
+            if str(a) == "nan":                 
                 a = "null"
             ret.append(a)
-
+    
     return ret
 
 def get_last_day_of_month(input, format='%Y-%m-%d'):
@@ -172,9 +186,6 @@ def get_heating_period():
 
 
 def present_data(user_id, chartid, chart_type):
-    # FIXME : load this from user profile
-    # if gazolie (but if elec this is non sens)
-    # heating_period={ "start":9, "end":5 }
     heating_period=get_heating_period()
 
     year = date.today().year 
