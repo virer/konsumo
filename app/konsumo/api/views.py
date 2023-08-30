@@ -31,10 +31,9 @@ def api_add_one(type):
 
     date   = json_data["date"]
     value1 = json_data['value1']
-    try:
-        value2 = json_data['value2']+"" # ALLOWED NULL VALUE HERE
-    except:
-        value2 = ""
+    value2 = ""
+    if 'value2' in json_data: # Allowed null value2
+        value2 = str(json_data['value2'])
 
     User.set_data(date, type, value1, value2, auth.current_user())
 
@@ -57,10 +56,9 @@ def api_add_multi(type):
     for json_data in json_datas:
         date   = json_data["date"]
         value1 = json_data['value1']
-        try:
-            value2 = json_data['value2']+"" # ALLOWED NULL VALUE HERE
-        except:
-            value2 = ""
+        value2 = ""
+        if 'value2' in json_data: # Allowed null value2
+            value2 = str(json_data['value2'])
 
         User.set_data(date, type, value1, value2, auth.current_user())
 
