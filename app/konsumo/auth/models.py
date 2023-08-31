@@ -113,7 +113,7 @@ class User(db.Model, UserMixin):
     def get_raw_data(user_id, type):
         sql = db.select(
                 UserData.id, UserData.date, UserData.value1, UserData.value2
-            ).order_by(UserData.date).where(UserData.type == type).where(UserData.user_id == user_id)
+            ).order_by(UserData.date.desc()).where(UserData.type == type).where(UserData.user_id == user_id)
         
         try:
             rows = db.session.execute(sql)
