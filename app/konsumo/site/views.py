@@ -17,6 +17,7 @@ def regenerate():
 
 @bp.route('/profile', methods=['GET'])
 def profile():
+    global type_list
     chart_type = type_list[0]
     try:
         _, access_key, secret_key = User.get_info(current_user.id)
@@ -32,6 +33,7 @@ def profile():
 @login_required
 @bp.route('/chart/<prefix>', methods=['GET'])
 def chart(prefix):
+    global type_list
     chart_type = request.args.get('type')
     if chart_type not in type_list: abort(400)
 
@@ -50,6 +52,7 @@ def chart(prefix):
 @login_required
 @bp.route('/location', methods=['GET','POST'])
 def location():
+    global type_list
     chart_type = type_list[0]
     if request.method=='POST':
         location = request.form['location']
@@ -143,6 +146,7 @@ def charts():
 @bp.route('/', methods=['GET'])
 @bp.route('', methods=['GET'])
 def index():
+    global type_list
     chart_type = type_list[0]
     return render_template('index.html', 
                            chart_type=chart_type,
