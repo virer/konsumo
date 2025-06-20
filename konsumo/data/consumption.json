@@ -1,0 +1,18 @@
+[
+  {
+    "date": "2025-06-20T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 123,
+    "electricity_night": 456
+  },
+  {
+    "date": "2025-06-20T00:00:00Z",
+    "category": "water",
+    "water": 5656
+  },
+  {
+    "date": "2025-06-20T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 5656
+  }
+]

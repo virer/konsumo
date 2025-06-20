@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Konsumo</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h1>Home Consumption</h1>
+
+  <form method="POST" action="/submit">
+    <label>Date:</label>
+    <input type="date" name="date" id="dateInput" required><br>
+  
+    <label>Category:</label>
+    <select name="category" id="categorySelect" required onchange="onCategoryChange()">
+      <option value="">-- Select --</option>
+      <option value="water">Water</option>
+      <option value="electricity">Electricity</option>
+      <option value="fuel">Fuel</option>
+    </select><br>
+  
+    <div id="waterFields" style="display: none;">
+      Water (L): <input type="number" step="0.01" name="water"><br>
+    </div>
+  
+    <div id="electricityFields" style="display: none;">
+      Electricity Day (kWh): <input type="number" step="0.01" name="electricity_day"><br>
+      Electricity Night (kWh): <input type="number" step="0.01" name="electricity_night"><br>
+    </div>
+  
+    <div id="fuelFields" style="display: none;">
+      Gasoline (L): <input type="number" step="0.01" name="gasoline"><br>
+    </div>
+  
+    <button type="submit">Submit</button>
+  </form>
+  
+  <script>
+    // Auto-fill today’s date
+    document.addEventListener("DOMContentLoaded", () => {
+      const today = new Date().toISOString().split("T")[0];
+      document.getElementById("dateInput").value = today;
+    });
+  
+    function onCategoryChange() {
+      const category = document.getElementById("categorySelect").value;
+      document.getElementById("waterFields").style.display = (category === "water") ? "block" : "none";
+      document.getElementById("electricityFields").style.display = (category === "electricity") ? "block" : "none";
+      document.getElementById("fuelFields").style.display = (category === "fuel") ? "block" : "none";
+    }
+  </script>
+  
+  <canvas id="consumptionChart" width="800" height="400"></canvas>
+
+  <script>
+    const entries = {{ . | marshal }};
+    const dates = entries.map(e => e.date);
+    const water = entries.map(e => e.water);
+    const electricity_day = entries.map(e => e.electricity_day);
+    const electricity_night = entries.map(e => e.electricity_night);
+
+    const gasoline = entries.map(e => e.gasoline);
+
+    const ctx = document.getElementById('consumptionChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: dates,
+        datasets: [
+          { label: 'Water (L)', data: water, borderColor: 'blue', fill: false },
+          { label: 'Day Electricity (kWh)', data: electricity_day, borderColor: 'green', fill: false },
+          { label: 'Night Electricity (kWh)', data: electricity_night, borderColor: 'green', fill: false },
+          { label: 'Gasoline (L)', data: gasoline, borderColor: 'red', fill: false },
+        ]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { beginAtZero: true }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
