@@ -1,43 +1,96 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Konsumo</title>
+  <title>Konsumo Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .tabs {
+      display: flex;
+      margin-bottom: 10px;
+      border-bottom: 1px solid #ccc;
+    }
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      border: 1px solid #ccc;
+      border-bottom: none;
+      background-color: #f0f0f0;
+      margin-right: 5px;
+      border-radius: 5px 5px 0 0;
+    }
+    .tab.active {
+      background-color: white;
+      font-weight: bold;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+  </style>
 </head>
 <body>
-  <h1>Home Consumption</h1>
+  <h1>Konsumo - Home Consumption</h1>
 
-  <form method="POST" action="/submit">
-    <label>Date:</label>
-    <input type="date" name="date" id="dateInput" required><br>
+
   
-    <label>Category:</label>
-    <select name="category" id="categorySelect" required onchange="onCategoryChange()">
-      <option value="">-- Select --</option>
-      <option value="water">Water</option>
-      <option value="electricity">Electricity</option>
-      <option value="fuel">Fuel</option>
-    </select><br>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('electricity')">Electricity</div>
+    <div class="tab" onclick="switchTab('water')">Water</div>
+    <div class="tab" onclick="switchTab('fuel')">Fuel</div>
+    <div class="tab" onclick="switchTab('form')">+ Add Entry</div>
+  </div>
   
-    <div id="waterFields" style="display: none;">
-      Water (L): <input type="number" step="0.01" name="water"><br>
-    </div>
+  <div id="tab-electricity" class="tab-content active">
+    <h2>Electricity Usage</h2>
+    <canvas id="electricityChart"></canvas>
+  </div>
   
-    <div id="electricityFields" style="display: none;">
-      Electricity Day (kWh): <input type="number" step="0.01" name="electricity_day"><br>
-      Electricity Night (kWh): <input type="number" step="0.01" name="electricity_night"><br>
-    </div>
+  <div id="tab-water" class="tab-content">
+    <h2>Water Usage</h2>
+    <canvas id="waterChart"></canvas>
+  </div>
   
-    <div id="fuelFields" style="display: none;">
-      Gasoline (L): <input type="number" step="0.01" name="gasoline"><br>
-    </div>
+  <div id="tab-fuel" class="tab-content">
+    <h2>Fuel Usage</h2>
+    <canvas id="fuelChart"></canvas>
+  </div>
   
-    <button type="submit">Submit</button>
-  </form>
-  
+  <div id="tab-form" class="tab-content">
+    <h2>Add New Entry</h2>
+    <form method="POST" action="/submit">
+      <label>Date:</label>
+      <input type="date" name="date" id="dateInput" required><br>
+
+      <label>Category:</label>
+      <select name="category" id="categorySelect" required onchange="onCategoryChange()">
+        <option value="">-- Select --</option>
+        <option value="water">Water</option>
+        <option value="electricity">Electricity</option>
+        <option value="fuel">Fuel</option>
+      </select><br>
+
+      <div id="waterFields" style="display: none;">
+        Water (L): <input type="number" step="0.01" name="water"><br>
+      </div>
+
+      <div id="electricityFields" style="display: none;">
+        Electricity Day (kWh): <input type="number" step="0.01" name="electricity_day"><br>
+        Electricity Night (kWh): <input type="number" step="0.01" name="electricity_night"><br>
+      </div>
+
+      <div id="fuelFields" style="display: none;">
+        Gasoline (L): <input type="number" step="0.01" name="gasoline"><br>
+      </div>
+
+      <button type="submit">Submit</button>
+    </form>
+  </div>
+
+
   <script>
-    // Auto-fill today’s date
+    // Auto-fill today
     document.addEventListener("DOMContentLoaded", () => {
       const today = new Date().toISOString().split("T")[0];
       document.getElementById("dateInput").value = today;
@@ -49,38 +102,136 @@
       document.getElementById("electricityFields").style.display = (category === "electricity") ? "block" : "none";
       document.getElementById("fuelFields").style.display = (category === "fuel") ? "block" : "none";
     }
-  </script>
   
-  <canvas id="consumptionChart" width="800" height="400"></canvas>
-
-  <script>
-    const entries = {{ . | marshal }};
-    const dates = entries.map(e => e.date);
-    const water = entries.map(e => e.water);
-    const electricity_day = entries.map(e => e.electricity_day);
-    const electricity_night = entries.map(e => e.electricity_night);
-
-    const gasoline = entries.map(e => e.gasoline);
-
-    const ctx = document.getElementById('consumptionChart').getContext('2d');
-    new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: dates,
-        datasets: [
-          { label: 'Water (L)', data: water, borderColor: 'blue', fill: false },
-          { label: 'Day Electricity (kWh)', data: electricity_day, borderColor: 'green', fill: false },
-          { label: 'Night Electricity (kWh)', data: electricity_night, borderColor: 'green', fill: false },
-          { label: 'Gasoline (L)', data: gasoline, borderColor: 'red', fill: false },
-        ]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          y: { beginAtZero: true }
+    // Tab switching logic
+    function switchTab(tabName) {
+      const contents = document.querySelectorAll(".tab-content");
+      const tabs = document.querySelectorAll(".tab");
+      contents.forEach(c => c.classList.remove("active"));
+      tabs.forEach(t => t.classList.remove("active"));
+  
+      document.getElementById("tab-" + tabName).classList.add("active");
+      tabs.forEach(tab => {
+        if (tab.textContent.toLowerCase().includes(tabName)) {
+          tab.classList.add("active");
         }
+      });
+    }
+  
+    // Parse and sort entries
+    let entries = {{ marshal . }};
+    entries.sort((a, b) => new Date(a.date) - new Date(b.date));
+  
+    const parseData = (category, field1, field2) => {
+      return entries.filter(e => e.category === category).map(e => ({
+        date: new Date(e.date).toISOString().split("T")[0],
+        value1: e[field1] || 0,
+        value2: field2 ? (e[field2] || 0) : null
+      }));
+    };
+  
+    // Electricity chart
+    const electricityData = parseData("electricity", "electricity_day", "electricity_night");
+    new Chart(document.getElementById("electricityChart"), {
+      type: "line",
+      data: {
+        labels: electricityData.map(e => e.date),
+        datasets: [
+          {
+            label: "Day (kWh)",
+            data: electricityData.map(e => e.value1),
+            borderColor: "orange",
+            fill: false
+          },
+          {
+            label: "Night (kWh)",
+            data: electricityData.map(e => e.value2),
+            borderColor: "purple",
+            fill: false
+          }
+        ]
       }
     });
+  
+    const waterEntries = parseData("water", "water", null);
+
+// Normalize to liters/day
+const waterRates = waterEntries.slice(1).map((entry, i) => {
+  const prev = waterEntries[i];
+  const days = (new Date(entry.date) - new Date(prev.date)) / (1000 * 60 * 60 * 24);
+  const delta = entry.value1 - prev.value1;
+  return {
+    date: entry.date,
+    rate: days > 0 ? delta / days : 0
+  };
+});
+
+new Chart(document.getElementById("waterChart"), {
+  type: "bar",
+  data: {
+    labels: waterRates.map(e => e.date),
+    datasets: [{
+      label: "Avg Daily Water Usage (L/day)",
+      data: waterRates.map(e => e.rate),
+      backgroundColor: "rgba(54, 162, 235, 0.5)",
+      borderColor: "blue",
+      borderWidth: 1
+    }]
+  },
+  options: {
+    scales: {
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: "Liters/Day"
+        }
+      }
+    }
+  }
+});
+
+  
+const fuelEntries = parseData("fuel", "gasoline", null);
+
+// Normalize to liters/day consumption
+const fuelRates = fuelEntries.slice(1).map((entry, i) => {
+  const prev = fuelEntries[i];
+  const days = (new Date(entry.date) - new Date(prev.date)) / (1000 * 60 * 60 * 24);
+  const delta = prev.value1 - entry.value1; // tank got smaller
+  return {
+    date: entry.date,
+    rate: days > 0 ? delta / days : 0
+  };
+});
+
+new Chart(document.getElementById("fuelChart"), {
+  type: "bar",
+  data: {
+    labels: fuelRates.map(e => e.date),
+    datasets: [{
+      label: "Avg Fuel Burn (L/day)",
+      data: fuelRates.map(e => e.rate),
+      backgroundColor: "rgba(0, 128, 0, 0.5)",
+      borderColor: "green",
+      borderWidth: 1
+    }]
+  },
+  options: {
+    scales: {
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: "Liters/Day"
+        }
+      }
+    }
+  }
+});
+
   </script>
+  
+  
 </body>
 </html>

@@ -14,5 +14,30 @@
     "date": "2025-06-20T00:00:00Z",
     "category": "fuel",
     "gasoline": 5656
+  },
+  {
+  "date": "2025-05-20T00:00:00Z",
+  "category": "fuel",
+  "gasoline": 7656
+  },
+  {
+    "date": "2025-04-20T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 7746
+    },
+  {
+    "date": "2025-05-20T00:00:00Z",
+    "category": "water",
+    "water": 5600
+  },
+  {
+    "date": "2025-04-20T00:00:00Z",
+    "category": "water",
+    "water": 5545
+  },
+  {
+    "date": "2025-03-20T00:00:00Z",
+    "category": "water",
+    "water": 5513
   }
 ]
