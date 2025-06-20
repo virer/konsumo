@@ -1,7 +1,7 @@
 #!/bin/bash
 # export MARIADB_ROOT_PASSWORD="MyVerySecretPassword"
 
-podman run --rm -d --name mariadb -v /data/mariadb/:/var/lib/mysql/ --network host \
+podman run --rm -d --name mariadb -v /data/mariadb/:/var/lib/mysql/:rw --network host \
     -e MARIADB_ROOT_PASSWORD="$MARIADB_ROOT_PASSWORD" \
     -e MARIADB_DATABASE="konsumo" \
     -e MARIADB_USER="konsumo" \
