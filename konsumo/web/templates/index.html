@@ -28,6 +28,11 @@
     .tab-content.active {
       display: block;
     }
+    canvas {
+      max-width: 85%;
+      max-height: 70vh;
+      height: auto !important;
+    }
   </style>
 </head>
 <body>
@@ -90,10 +95,25 @@
 
 
   <script>
-    // Auto-fill today
+    // Auto-fill today and restore form state from URL
     document.addEventListener("DOMContentLoaded", () => {
       const today = new Date().toISOString().split("T")[0];
       document.getElementById("dateInput").value = today;
+      
+      // Check URL parameters for tab and category
+      const urlParams = new URLSearchParams(window.location.search);
+      const tab = urlParams.get("tab");
+      const category = urlParams.get("category");
+      
+      // Set category value first if present
+      if (category) {
+        const categorySelect = document.getElementById("categorySelect");
+        categorySelect.value = category;
+      }
+      
+      if (tab === "form") {
+        switchTab("form");
+      }
     });
   
     function onCategoryChange() {
@@ -109,129 +129,194 @@
       const tabs = document.querySelectorAll(".tab");
       contents.forEach(c => c.classList.remove("active"));
       tabs.forEach(t => t.classList.remove("active"));
-  
+      
       document.getElementById("tab-" + tabName).classList.add("active");
       tabs.forEach(tab => {
         if (tab.textContent.toLowerCase().includes(tabName)) {
           tab.classList.add("active");
         }
       });
+      
+      // If switching to form tab, ensure category fields are shown if category is selected
+      if (tabName === "form") {
+        const categorySelect = document.getElementById("categorySelect");
+        if (categorySelect && categorySelect.value) {
+          onCategoryChange();
+        }
+      }
     }
   
-    // Parse and sort entries
-    let entries = {{ marshal . }};
-    entries.sort((a, b) => new Date(a.date) - new Date(b.date));
+    // Get pre-aggregated data from backend
+    const chartData = {{ marshal . }};
+    const entries = chartData.entries || [];
+    
+    // Month names for labels
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    // Color palette for different years
+    const yearColors = [
+      "rgb(255, 99, 132)",   // red
+      "rgb(54, 162, 235)",   // blue
+      "rgb(255, 206, 86)",   // yellow
+      "rgb(75, 192, 192)",   // teal
+      "rgb(153, 102, 255)",  // purple
+      "rgb(255, 159, 64)",   // orange
+      "rgb(199, 199, 199)",  // grey
+      "rgb(83, 102, 255)",   // indigo
+      "rgb(255, 99, 255)",   // pink
+      "rgb(99, 255, 132)"    // green
+    ];
   
-    const parseData = (category, field1, field2) => {
-      return entries.filter(e => e.category === category).map(e => ({
-        date: new Date(e.date).toISOString().split("T")[0],
-        value1: e[field1] || 0,
-        value2: field2 ? (e[field2] || 0) : null
-      }));
-    };
-  
+    // Helper function to create chart datasets from aggregated data
+    function createDatasets(dataByYear, colorIndex) {
+      const years = Object.keys(dataByYear).sort();
+      return years.map((year, idx) => {
+        const yearData = dataByYear[year] || [];
+        return {
+          label: year,
+          data: yearData.map(point => ({
+            x: point.month,
+            y: point.rate
+          })),
+          borderColor: yearColors[(colorIndex + idx) % yearColors.length],
+          fill: false,
+          borderWidth: 2
+        };
+      });
+    }
+    
     // Electricity chart
-    const electricityData = parseData("electricity", "electricity_day", "electricity_night");
+    const electricityDatasets = createDatasets(chartData.electricity || {}, 0);
     new Chart(document.getElementById("electricityChart"), {
       type: "line",
       data: {
-        labels: electricityData.map(e => e.date),
-        datasets: [
-          {
-            label: "Day (kWh)",
-            data: electricityData.map(e => e.value1),
-            borderColor: "orange",
-            fill: false
+        datasets: electricityDatasets
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 2,
+        scales: {
+          x: {
+            type: "linear",
+            position: "bottom",
+            title: {
+              display: true,
+              text: "Month"
+            },
+            min: 1,
+            max: 12,
+            ticks: {
+              stepSize: 1,
+              callback: function(value) {
+                const month = Math.round(value);
+                if (month >= 1 && month <= 12) {
+                  return monthNames[month - 1];
+                }
+                return "";
+              }
+            }
           },
-          {
-            label: "Night (kWh)",
-            data: electricityData.map(e => e.value2),
-            borderColor: "purple",
-            fill: false
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: "kWh/Day"
+            }
           }
-        ]
+        }
       }
     });
   
-    const waterEntries = parseData("water", "water", null);
-
-// Normalize to liters/day
-const waterRates = waterEntries.slice(1).map((entry, i) => {
-  const prev = waterEntries[i];
-  const days = (new Date(entry.date) - new Date(prev.date)) / (1000 * 60 * 60 * 24);
-  const delta = entry.value1 - prev.value1;
-  return {
-    date: entry.date,
-    rate: days > 0 ? delta / days : 0
-  };
-});
-
-new Chart(document.getElementById("waterChart"), {
-  type: "bar",
-  data: {
-    labels: waterRates.map(e => e.date),
-    datasets: [{
-      label: "Avg Daily Water Usage (L/day)",
-      data: waterRates.map(e => e.rate),
-      backgroundColor: "rgba(54, 162, 235, 0.5)",
-      borderColor: "blue",
-      borderWidth: 1
-    }]
-  },
-  options: {
-    scales: {
-      y: {
-        beginAtZero: true,
-        title: {
-          display: true,
-          text: "Liters/Day"
+    // Water chart
+    const waterDatasets = createDatasets(chartData.water || {}, 1);
+    new Chart(document.getElementById("waterChart"), {
+      type: "line",
+      data: {
+        datasets: waterDatasets
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 2,
+        scales: {
+          x: {
+            type: "linear",
+            position: "bottom",
+            title: {
+              display: true,
+              text: "Month"
+            },
+            min: 1,
+            max: 12,
+            ticks: {
+              stepSize: 1,
+              callback: function(value) {
+                const month = Math.round(value);
+                if (month >= 1 && month <= 12) {
+                  return monthNames[month - 1];
+                }
+                return "";
+              }
+            }
+          },
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: "Liters/Day"
+            }
+          }
         }
       }
-    }
-  }
-});
+    });
 
-  
-const fuelEntries = parseData("fuel", "gasoline", null);
-
-// Normalize to liters/day consumption
-const fuelRates = fuelEntries.slice(1).map((entry, i) => {
-  const prev = fuelEntries[i];
-  const days = (new Date(entry.date) - new Date(prev.date)) / (1000 * 60 * 60 * 24);
-  const delta = prev.value1 - entry.value1; // tank got smaller
-  return {
-    date: entry.date,
-    rate: days > 0 ? delta / days : 0
-  };
-});
-
-new Chart(document.getElementById("fuelChart"), {
-  type: "bar",
-  data: {
-    labels: fuelRates.map(e => e.date),
-    datasets: [{
-      label: "Avg Fuel Burn (L/day)",
-      data: fuelRates.map(e => e.rate),
-      backgroundColor: "rgba(0, 128, 0, 0.5)",
-      borderColor: "green",
-      borderWidth: 1
-    }]
-  },
-  options: {
-    scales: {
-      y: {
-        beginAtZero: true,
-        title: {
-          display: true,
-          text: "Liters/Day"
+    // Fuel chart
+    const fuelDatasets = createDatasets(chartData.fuel || {}, 2);
+    new Chart(document.getElementById("fuelChart"), {
+      type: "line",
+      data: {
+        datasets: fuelDatasets
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 2,
+        scales: {
+          x: {
+            type: "linear",
+            position: "bottom",
+            title: {
+              display: true,
+              text: "Month"
+            },
+            min: 1,
+            max: 12,
+            ticks: {
+              stepSize: 1,
+              callback: function(value) {
+                const month = Math.round(value);
+                if (month >= 1 && month <= 12) {
+                  return monthNames[month - 1];
+                }
+                return "";
+              }
+            }
+          },
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: "Liters/Day"
+            }
+          }
         }
       }
-    }
-  }
-});
+    });
 
   </script>
   
   
 </body>
 </html>
+

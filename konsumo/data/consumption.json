@@ -1,43 +1,673 @@
 [
   {
-    "date": "2025-06-20T00:00:00Z",
+    "date": "2020-01-21T00:00:00Z",
+    "category": "water",
+    "water": 120
+  },
+  {
+    "date": "2021-01-21T00:00:00Z",
+    "category": "water",
+    "water": 246
+  },
+  {
+    "date": "2021-05-03T00:00:00Z",
+    "category": "water",
+    "water": 278
+  },
+  {
+    "date": "2021-11-03T00:00:00Z",
+    "category": "water",
+    "water": 341
+  },
+  {
+    "date": "2021-11-16T00:00:00Z",
+    "category": "water",
+    "water": 346
+  },
+  {
+    "date": "2021-12-30T00:00:00Z",
+    "category": "water",
+    "water": 361
+  },
+  {
+    "date": "2022-01-09T00:00:00Z",
+    "category": "water",
+    "water": 365
+  },
+  {
+    "date": "2022-06-04T00:00:00Z",
+    "category": "water",
+    "water": 414
+  },
+  {
+    "date": "2022-09-19T00:00:00Z",
+    "category": "water",
+    "water": 452
+  },
+  {
+    "date": "2022-10-18T00:00:00Z",
+    "category": "water",
+    "water": 461
+  },
+  {
+    "date": "2022-11-19T00:00:00Z",
+    "category": "water",
+    "water": 472
+  },
+  {
+    "date": "2022-12-22T00:00:00Z",
+    "category": "water",
+    "water": 482
+  },
+  {
+    "date": "2023-01-18T00:00:00Z",
+    "category": "water",
+    "water": 492
+  },
+  {
+    "date": "2023-02-16T00:00:00Z",
+    "category": "water",
+    "water": 501
+  },
+  {
+    "date": "2023-03-15T00:00:00Z",
+    "category": "water",
+    "water": 510
+  },
+  {
+    "date": "2023-04-13T00:00:00Z",
+    "category": "water",
+    "water": 520
+  },
+  {
+    "date": "2023-05-13T00:00:00Z",
+    "category": "water",
+    "water": 531
+  },
+  {
+    "date": "2023-06-10T00:00:00Z",
+    "category": "water",
+    "water": 543
+  },
+  {
+    "date": "2023-07-11T00:00:00Z",
+    "category": "water",
+    "water": 557
+  },
+  {
+    "date": "2023-08-12T00:00:00Z",
+    "category": "water",
+    "water": 570
+  },
+  {
+    "date": "2023-09-11T00:00:00Z",
+    "category": "water",
+    "water": 584
+  },
+  {
+    "date": "2023-10-21T00:00:00Z",
+    "category": "water",
+    "water": 600
+  },
+  {
+    "date": "2023-11-21T00:00:00Z",
+    "category": "water",
+    "water": 613
+  },
+  {
+    "date": "2023-12-23T00:00:00Z",
+    "category": "water",
+    "water": 626
+  },
+  {
+    "date": "2024-01-13T00:00:00Z",
+    "category": "water",
+    "water": 634
+  },
+  {
+    "date": "2024-02-17T00:00:00Z",
+    "category": "water",
+    "water": 647
+  },
+  {
+    "date": "2024-03-19T00:00:00Z",
+    "category": "water",
+    "water": 659
+  },
+  {
+    "date": "2024-04-08T00:00:00Z",
+    "category": "water",
+    "water": 666
+  },
+  {
+    "date": "2024-05-14T00:00:00Z",
+    "category": "water",
+    "water": 681
+  },
+  {
+    "date": "2024-06-15T00:00:00Z",
+    "category": "water",
+    "water": 694
+  },
+  {
+    "date": "2024-07-11T00:00:00Z",
+    "category": "water",
+    "water": 704
+  },
+  {
+    "date": "2024-08-15T00:00:00Z",
+    "category": "water",
+    "water": 717
+  },
+  {
+    "date": "2024-09-02T00:00:00Z",
+    "category": "water",
+    "water": 723
+  },
+  {
+    "date": "2024-10-07T00:00:00Z",
+    "category": "water",
+    "water": 737
+  },
+  {
+    "date": "2024-11-01T00:00:00Z",
+    "category": "water",
+    "water": 748
+  },
+  {
+    "date": "2024-12-11T00:00:00Z",
+    "category": "water",
+    "water": 762
+  },
+  {
+    "date": "2025-01-14T00:00:00Z",
+    "category": "water",
+    "water": 775
+  },
+  {
+    "date": "2025-02-17T00:00:00Z",
+    "category": "water",
+    "water": 788
+  },
+  {
+    "date": "2025-03-10T00:00:00Z",
+    "category": "water",
+    "water": 797
+  },
+  {
+    "date": "2025-04-09T00:00:00Z",
+    "category": "water",
+    "water": 807
+  },
+  {
+    "date": "2025-06-02T00:00:00Z",
+    "category": "water",
+    "water": 827
+  },
+  {
+    "date": "2025-06-17T00:00:00Z",
+    "category": "water",
+    "water": 833
+  },
+  {
+    "date": "2025-07-18T00:00:00Z",
+    "category": "water",
+    "water": 850
+  },
+  {
+    "date": "2025-08-17T00:00:00Z",
+    "category": "water",
+    "water": 867
+  },
+  {
+    "date": "2025-09-17T00:00:00Z",
+    "category": "water",
+    "water": 881
+  },
+  {
+    "date": "2025-10-17T00:00:00Z",
+    "category": "water",
+    "water": 893
+  },
+  {
+    "date": "2025-11-18T00:00:00Z",
+    "category": "water",
+    "water": 907
+  },
+  {
+    "date": "2025-12-17T00:00:00Z",
+    "category": "water",
+    "water": 920
+  },
+  {
+    "date": "2018-05-07T00:00:00Z",
     "category": "electricity",
-    "electricity_day": 123,
-    "electricity_night": 456
+    "electricity_day": 3125,
+    "electricity_night": 7192
   },
   {
-    "date": "2025-06-20T00:00:00Z",
-    "category": "water",
-    "water": 5656
+    "date": "2019-04-06T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 4783,
+    "electricity_night": 8983
   },
   {
-    "date": "2025-06-20T00:00:00Z",
+    "date": "2020-04-07T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 6804,
+    "electricity_night": 10908
+  },
+  {
+    "date": "2020-06-28T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 7282,
+    "electricity_night": 11334
+  },
+  {
+    "date": "2020-07-20T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 7388,
+    "electricity_night": 11439
+  },
+  {
+    "date": "2020-09-23T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 7693,
+    "electricity_night": 11786
+  },
+  {
+    "date": "2021-01-19T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 8380,
+    "electricity_night": 12543
+  },
+  {
+    "date": "2021-02-14T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 8524,
+    "electricity_night": 12723
+  },
+  {
+    "date": "2021-03-31T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 8754,
+    "electricity_night": 12988
+  },
+  {
+    "date": "2021-04-15T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 8825,
+    "electricity_night": 13105
+  },
+  {
+    "date": "2021-05-02T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 8903,
+    "electricity_night": 13200
+  },
+  {
+    "date": "2021-06-02T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 9030,
+    "electricity_night": 13346
+  },
+  {
+    "date": "2021-07-24T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 9257,
+    "electricity_night": 13569
+  },
+  {
+    "date": "2021-08-23T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 9386,
+    "electricity_night": 13732
+  },
+  {
+    "date": "2021-09-19T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 9504,
+    "electricity_night": 13857
+  },
+  {
+    "date": "2021-10-18T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 9626,
+    "electricity_night": 14016
+  },
+  {
+    "date": "2021-11-21T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 9814,
+    "electricity_night": 14208
+  },
+  {
+    "date": "2021-12-28T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 10050,
+    "electricity_night": 14460
+  },
+  {
+    "date": "2022-01-09T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 10137,
+    "electricity_night": 14543
+  },
+  {
+    "date": "2022-02-09T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 10321,
+    "electricity_night": 14755
+  },
+  {
+    "date": "2022-03-28T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 10523,
+    "electricity_night": 14975
+  },
+  {
+    "date": "2022-04-15T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 10683,
+    "electricity_night": 15120
+  },
+  {
+    "date": "2022-05-05T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 10777,
+    "electricity_night": 15265
+  },
+  {
+    "date": "2022-06-04T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 10891,
+    "electricity_night": 15394
+  },
+  {
+    "date": "2022-07-20T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 11062,
+    "electricity_night": 15593
+  },
+  {
+    "date": "2022-08-24T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 11194,
+    "electricity_night": 15724
+  },
+  {
+    "date": "2022-09-23T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 11355,
+    "electricity_night": 15833
+  },
+  {
+    "date": "2022-10-23T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 11501,
+    "electricity_night": 15970
+  },
+  {
+    "date": "2022-11-23T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 11683,
+    "electricity_night": 16106
+  },
+  {
+    "date": "2022-12-24T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 11861,
+    "electricity_night": 16260
+  },
+  {
+    "date": "2023-01-22T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 12047,
+    "electricity_night": 16425
+  },
+  {
+    "date": "2023-02-22T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 12234,
+    "electricity_night": 16604
+  },
+  {
+    "date": "2023-03-23T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 12414,
+    "electricity_night": 16752
+  },
+  {
+    "date": "2023-04-22T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 12572,
+    "electricity_night": 16887
+  },
+  {
+    "date": "2023-05-24T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 12728,
+    "electricity_night": 17048
+  },
+  {
+    "date": "2023-06-22T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 12833,
+    "electricity_night": 17169
+  },
+  {
+    "date": "2023-07-25T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 13010,
+    "electricity_night": 17299
+  },
+  {
+    "date": "2023-08-22T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 13150,
+    "electricity_night": 17418
+  },
+  {
+    "date": "2023-09-20T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 13291,
+    "electricity_night": 17538
+  },
+  {
+    "date": "2023-10-20T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 13468,
+    "electricity_night": 17667
+  },
+  {
+    "date": "2023-11-21T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 13664,
+    "electricity_night": 17845
+  },
+  {
+    "date": "2023-12-23T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 13887,
+    "electricity_night": 18010
+  },
+  {
+    "date": "2024-01-16T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 14034,
+    "electricity_night": 18170
+  },
+  {
+    "date": "2024-02-19T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 14227,
+    "electricity_night": 18367
+  },
+  {
+    "date": "2024-03-19T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 14377,
+    "electricity_night": 18517
+  },
+  {
+    "date": "2024-04-17T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 14540,
+    "electricity_night": 18673
+  },
+  {
+    "date": "2024-05-14T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 14691,
+    "electricity_night": 18804
+  },
+  {
+    "date": "2024-06-14T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 14800,
+    "electricity_night": 18900
+  },
+  {
+    "date": "2024-07-11T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 14927,
+    "electricity_night": 19086
+  },
+  {
+    "date": "2024-08-06T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 15029,
+    "electricity_night": 19202
+  },
+  {
+    "date": "2024-09-02T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 15127,
+    "electricity_night": 19314
+  },
+  {
+    "date": "2024-10-12T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 15333,
+    "electricity_night": 19492
+  },
+  {
+    "date": "2024-11-01T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 15446,
+    "electricity_night": 19601
+  },
+  {
+    "date": "2024-12-11T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 15680,
+    "electricity_night": 19825
+  },
+  {
+    "date": "2025-01-14T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 15924,
+    "electricity_night": 20034
+  },
+  {
+    "date": "2025-02-17T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 16141,
+    "electricity_night": 20258
+  },
+  {
+    "date": "2025-03-10T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 16288,
+    "electricity_night": 20382
+  },
+  {
+    "date": "2025-04-09T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 16448,
+    "electricity_night": 20540
+  },
+  {
+    "date": "2025-06-02T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 16745,
+    "electricity_night": 20786
+  },
+  {
+    "date": "2025-06-17T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 16825,
+    "electricity_night": 20841
+  },
+  {
+    "date": "2025-07-18T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 17018,
+    "electricity_night": 20960
+  },
+  {
+    "date": "2025-08-17T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 17188,
+    "electricity_night": 21095
+  },
+  {
+    "date": "2025-09-17T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 17379,
+    "electricity_night": 21219
+  },
+  {
+    "date": "2025-10-17T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 17561,
+    "electricity_night": 21359
+  },
+  {
+    "date": "2025-11-18T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 17783,
+    "electricity_night": 21544
+  },
+  {
+    "date": "2025-12-17T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 18025,
+    "electricity_night": 21708
+  },
+  {
+    "date": "2025-09-22T00:00:00Z",
     "category": "fuel",
-    "gasoline": 5656
+    "gasoline": 1920
   },
   {
-  "date": "2025-05-20T00:00:00Z",
-  "category": "fuel",
-  "gasoline": 7656
-  },
-  {
-    "date": "2025-04-20T00:00:00Z",
+    "date": "2025-10-17T00:00:00Z",
     "category": "fuel",
-    "gasoline": 7746
-    },
-  {
-    "date": "2025-05-20T00:00:00Z",
-    "category": "water",
-    "water": 5600
+    "gasoline": 1840
   },
   {
-    "date": "2025-04-20T00:00:00Z",
-    "category": "water",
-    "water": 5545
+    "date": "2025-10-29T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1800
   },
   {
-    "date": "2025-03-20T00:00:00Z",
-    "category": "water",
-    "water": 5513
+    "date": "2025-11-18T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1720
+  },
+  {
+    "date": "2025-11-26T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1620
+  },
+  {
+    "date": "2025-12-17T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1500
+  },
+  {
+    "date": "2025-12-27T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1400
   }
 ]
