@@ -1,0 +1,1 @@
+cat /tmp/elec2.csv | sed -e 's/\([0-9][0-9]\)-\([0-9][0-9]\)-\([0-9][0-9][0-9][0-9]\);\(.*\);\(.*\);/{ "date": "\3-\2-\1T00:00:00Z", "category": "electricity", "electricity_day": \4, "electricity_night": \5 },/g
