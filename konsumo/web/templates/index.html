@@ -274,12 +274,43 @@
       }
     });
 
-    // Fuel chart
-    const fuelDatasets = createDatasets(chartData.fuel || {}, 2);
+    // Fuel chart - European heating period (August to July)
+    // Helper function to convert heating month (1-12) to calendar month
+    function heatingMonthToCalendarMonth(heatingMonth) {
+      if (heatingMonth <= 5) {
+        return heatingMonth + 7; // 1->8 (Aug), 2->9 (Sep), 3->10 (Oct), 4->11 (Nov), 5->12 (Dec)
+      }
+      return heatingMonth - 5; // 6->1 (Jan), 7->2 (Feb), 8->3 (Mar), 9->4 (Apr), 10->5 (May), 11->6 (Jun), 12->7 (Jul)
+    }
+    
+    // Helper function to convert calendar month to heating month position
+    function calendarMonthToHeatingMonth(calendarMonth) {
+      if (calendarMonth >= 8) {
+        return calendarMonth - 7; // Aug=1, Sep=2, Oct=3, Nov=4, Dec=5
+      }
+      return calendarMonth + 5; // Jan=6, Feb=7, Mar=8, Apr=9, May=10, Jun=11, Jul=12
+    }
+    
+    // Transform fuel datasets to use heating month positions
+    const fuelDataByYear = chartData.fuel || {};
+    const fuelDatasetsTransformed = Object.keys(fuelDataByYear).sort().map((year, idx) => {
+      const yearData = fuelDataByYear[year] || [];
+      return {
+        label: year,
+        data: yearData.map(point => ({
+          x: calendarMonthToHeatingMonth(point.month),
+          y: point.rate
+        })),
+        borderColor: yearColors[(2 + idx) % yearColors.length],
+        fill: false,
+        borderWidth: 2
+      };
+    });
+    
     new Chart(document.getElementById("fuelChart"), {
       type: "line",
       data: {
-        datasets: fuelDatasets
+        datasets: fuelDatasetsTransformed
       },
       options: {
         responsive: true,
@@ -291,16 +322,17 @@
             position: "bottom",
             title: {
               display: true,
-              text: "Month"
+              text: "Month (Heating Period)"
             },
             min: 1,
             max: 12,
             ticks: {
               stepSize: 1,
               callback: function(value) {
-                const month = Math.round(value);
-                if (month >= 1 && month <= 12) {
-                  return monthNames[month - 1];
+                const heatingMonth = Math.round(value);
+                if (heatingMonth >= 1 && heatingMonth <= 12) {
+                  const calendarMonth = heatingMonthToCalendarMonth(heatingMonth);
+                  return monthNames[calendarMonth - 1];
                 }
                 return "";
               }
@@ -327,9 +359,9 @@
       return num.toFixed(2);
     }
 
-    // Electricity latest data (3 latest entries)
+    // Electricity latest data (5 latest entries)
     if (chartData.latest_electricity && chartData.latest_electricity.length > 0) {
-      let html = '<h3>Latest 3 Data Points:</h3>';
+      let html = '<h3>Latest 5 Data Points:</h3>';
       chartData.latest_electricity.forEach((point, index) => {
         const dateStr = formatDate(point.date);
         const valueStr = formatNumber(point.value);
@@ -343,9 +375,9 @@
       document.getElementById("electricityLatest").innerHTML = html;
     }
 
-    // Water latest data (3 latest entries)
+    // Water latest data (5 latest entries)
     if (chartData.latest_water && chartData.latest_water.length > 0) {
-      let html = '<h3>Latest 3 Data Points:</h3>';
+      let html = '<h3>Latest 5 Data Points:</h3>';
       chartData.latest_water.forEach((point, index) => {
         const dateStr = formatDate(point.date);
         const valueStr = formatNumber(point.value);
@@ -359,9 +391,9 @@
       document.getElementById("waterLatest").innerHTML = html;
     }
 
-    // Fuel latest data (3 latest entries)
+    // Fuel latest data (5 latest entries)
     if (chartData.latest_fuel && chartData.latest_fuel.length > 0) {
-      let html = '<h3>Latest 3 Data Points:</h3>';
+      let html = '<h3>Latest 5 Data Points:</h3>';
       chartData.latest_fuel.forEach((point, index) => {
         const dateStr = formatDate(point.date);
         const valueStr = formatNumber(point.value);

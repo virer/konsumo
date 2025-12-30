@@ -270,6 +270,7 @@ func aggregateWater(entries []models.ConsumptionEntry) map[int][]MonthlyDataPoin
 }
 
 // aggregateFuel aggregates fuel data by month
+// Groups data by heating year (August to July) instead of calendar year
 func aggregateFuel(entries []models.ConsumptionEntry) map[int][]MonthlyDataPoint {
 	fuelEntries := []models.ConsumptionEntry{}
 	for _, e := range entries {
@@ -288,7 +289,14 @@ func aggregateFuel(entries []models.ConsumptionEntry) map[int][]MonthlyDataPoint
 		prev := fuelEntries[i-1]
 		curr := fuelEntries[i]
 
-		if prev.Date.Year() != curr.Date.Year() {
+		// For heating year, we need to handle cross-year periods
+		// A heating year runs from August to July
+		// So August-December belong to the current calendar year's heating period
+		// January-July belong to the next calendar year's heating period
+		prevHeatingYear := getHeatingYear(prev.Date)
+		currHeatingYear := getHeatingYear(curr.Date)
+
+		if prevHeatingYear != currHeatingYear {
 			continue
 		}
 
@@ -315,26 +323,54 @@ func aggregateFuel(entries []models.ConsumptionEntry) map[int][]MonthlyDataPoint
 	for key, rate := range monthlyRates {
 		var t time.Time
 		t, _ = time.Parse("2006-01", key)
-		year := t.Year()
 		month := int(t.Month())
 
-		result[year] = append(result[year], MonthlyDataPoint{
-			Year:  year,
+		// Group by heating year: August-December use current year, January-July use previous year
+		heatingYear := getHeatingYear(t)
+
+		result[heatingYear] = append(result[heatingYear], MonthlyDataPoint{
+			Year:  heatingYear,
 			Month: month,
 			Rate:  rate,
 		})
 	}
 
+	// Sort by heating month order: August (8) first, then 9,10,11,12,1,2,3,4,5,6,7
 	for year := range result {
 		sort.Slice(result[year], func(i, j int) bool {
-			return result[year][i].Month < result[year][j].Month
+			monthI := result[year][i].Month
+			monthJ := result[year][j].Month
+			// Convert to heating month order: Aug=1, Sep=2, ..., Jul=12
+			heatingMonthI := getHeatingMonth(monthI)
+			heatingMonthJ := getHeatingMonth(monthJ)
+			return heatingMonthI < heatingMonthJ
 		})
 	}
 
 	return result
 }
 
-// getLatestElectricity returns the 3 latest electricity entries and daily consumption
+// getHeatingYear returns the heating year for a given date
+// Heating year starts in August, so Aug-Dec belong to current year's heating period
+// Jan-Jul belong to the previous year's heating period
+func getHeatingYear(date time.Time) int {
+	month := int(date.Month())
+	if month >= 8 {
+		return date.Year()
+	}
+	return date.Year() - 1
+}
+
+// getHeatingMonth converts calendar month to heating month position (1-12)
+// August (8) -> 1, September (9) -> 2, ..., July (7) -> 12
+func getHeatingMonth(month int) int {
+	if month >= 8 {
+		return month - 7 // Aug=1, Sep=2, Oct=3, Nov=4, Dec=5
+	}
+	return month + 5 // Jan=6, Feb=7, Mar=8, Apr=9, May=10, Jun=11, Jul=12
+}
+
+// getLatestElectricity returns the 5 latest electricity entries and daily consumption
 func getLatestElectricity(entries []models.ConsumptionEntry) []LatestDataPoint {
 	electricityEntries := []models.ConsumptionEntry{}
 	for _, e := range entries {
@@ -350,9 +386,9 @@ func getLatestElectricity(entries []models.ConsumptionEntry) []LatestDataPoint {
 	})
 
 	result := []LatestDataPoint{}
-	// Need at least 4 entries to show 3 data points (each needs a previous entry)
-	if len(electricityEntries) < 4 {
-		// If we have 2-3 entries, show what we can
+	// Need at least 6 entries to show 5 data points (each needs a previous entry)
+	if len(electricityEntries) < 6 {
+		// If we have 2-5 entries, show what we can
 		if len(electricityEntries) >= 2 {
 			for i := 1; i < len(electricityEntries); i++ {
 				curr := electricityEntries[i]
@@ -382,9 +418,9 @@ func getLatestElectricity(entries []models.ConsumptionEntry) []LatestDataPoint {
 		return result
 	}
 
-	// Get the last 3 data points (need 4 entries total: last 3 + 1 previous)
-	// Process from len-3 to len-1 (3 entries), each calculated from previous
-	for i := len(electricityEntries) - 3; i < len(electricityEntries); i++ {
+	// Get the last 5 data points (need 6 entries total: last 5 + 1 previous)
+	// Process from len-5 to len-1 (5 entries), each calculated from previous
+	for i := len(electricityEntries) - 5; i < len(electricityEntries); i++ {
 		curr := electricityEntries[i]
 		prev := electricityEntries[i-1]
 
@@ -413,7 +449,7 @@ func getLatestElectricity(entries []models.ConsumptionEntry) []LatestDataPoint {
 	return result
 }
 
-// getLatestWater returns the 3 latest water entries and daily consumption
+// getLatestWater returns the 5 latest water entries and daily consumption
 func getLatestWater(entries []models.ConsumptionEntry) []LatestDataPoint {
 	waterEntries := []models.ConsumptionEntry{}
 	for _, e := range entries {
@@ -429,9 +465,9 @@ func getLatestWater(entries []models.ConsumptionEntry) []LatestDataPoint {
 	})
 
 	result := []LatestDataPoint{}
-	// Need at least 4 entries to show 3 data points (each needs a previous entry)
-	if len(waterEntries) < 4 {
-		// If we have 2-3 entries, show what we can
+	// Need at least 6 entries to show 5 data points (each needs a previous entry)
+	if len(waterEntries) < 6 {
+		// If we have 2-5 entries, show what we can
 		if len(waterEntries) >= 2 {
 			for i := 1; i < len(waterEntries); i++ {
 				curr := waterEntries[i]
@@ -459,9 +495,9 @@ func getLatestWater(entries []models.ConsumptionEntry) []LatestDataPoint {
 		return result
 	}
 
-	// Get the last 3 data points (need 4 entries total: last 3 + 1 previous)
-	// Process from len-3 to len-1 (3 entries), each calculated from previous
-	for i := len(waterEntries) - 3; i < len(waterEntries); i++ {
+	// Get the last 5 data points (need 6 entries total: last 5 + 1 previous)
+	// Process from len-5 to len-1 (5 entries), each calculated from previous
+	for i := len(waterEntries) - 5; i < len(waterEntries); i++ {
 		curr := waterEntries[i]
 		prev := waterEntries[i-1]
 
@@ -488,7 +524,7 @@ func getLatestWater(entries []models.ConsumptionEntry) []LatestDataPoint {
 	return result
 }
 
-// getLatestFuel returns the 3 latest fuel entries and daily consumption
+// getLatestFuel returns the 5 latest fuel entries and daily consumption
 func getLatestFuel(entries []models.ConsumptionEntry) []LatestDataPoint {
 	fuelEntries := []models.ConsumptionEntry{}
 	for _, e := range entries {
@@ -504,9 +540,9 @@ func getLatestFuel(entries []models.ConsumptionEntry) []LatestDataPoint {
 	})
 
 	result := []LatestDataPoint{}
-	// Need at least 4 entries to show 3 data points (each needs a previous entry)
-	if len(fuelEntries) < 4 {
-		// If we have 2-3 entries, show what we can
+	// Need at least 6 entries to show 5 data points (each needs a previous entry)
+	if len(fuelEntries) < 6 {
+		// If we have 2-5 entries, show what we can
 		if len(fuelEntries) >= 2 {
 			for i := 1; i < len(fuelEntries); i++ {
 				curr := fuelEntries[i]
@@ -534,9 +570,9 @@ func getLatestFuel(entries []models.ConsumptionEntry) []LatestDataPoint {
 		return result
 	}
 
-	// Get the last 3 data points (need 4 entries total: last 3 + 1 previous)
-	// Process from len-3 to len-1 (3 entries), each calculated from previous
-	for i := len(fuelEntries) - 3; i < len(fuelEntries); i++ {
+	// Get the last 5 data points (need 6 entries total: last 5 + 1 previous)
+	// Process from len-5 to len-1 (5 entries), each calculated from previous
+	for i := len(fuelEntries) - 5; i < len(fuelEntries); i++ {
 		curr := fuelEntries[i]
 		prev := fuelEntries[i-1]
 
