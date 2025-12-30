@@ -23,10 +23,10 @@ type MonthlyDataPoint struct {
 
 // ChartData contains aggregated data for charts
 type ChartData struct {
-	Entries      []models.ConsumptionEntry `json:"entries"`
-	Electricity  map[int][]MonthlyDataPoint `json:"electricity"` // year -> monthly points
-	Water        map[int][]MonthlyDataPoint `json:"water"`       // year -> monthly points
-	Fuel         map[int][]MonthlyDataPoint `json:"fuel"`        // year -> monthly points
+	Entries     []models.ConsumptionEntry  `json:"entries"`
+	Electricity map[int][]MonthlyDataPoint `json:"electricity"` // year -> monthly points
+	Water       map[int][]MonthlyDataPoint `json:"water"`       // year -> monthly points
+	Fuel        map[int][]MonthlyDataPoint `json:"fuel"`        // year -> monthly points
 }
 
 var funcMap = template.FuncMap{
@@ -139,7 +139,7 @@ func aggregateElectricity(entries []models.ConsumptionEntry) map[int][]MonthlyDa
 	for i := 1; i < len(electricityEntries); i++ {
 		prev := electricityEntries[i-1]
 		curr := electricityEntries[i]
-		
+
 		if prev.Date.Year() != curr.Date.Year() {
 			continue // Skip cross-year calculations
 		}
@@ -158,7 +158,7 @@ func aggregateElectricity(entries []models.ConsumptionEntry) map[int][]MonthlyDa
 		year := prev.Date.Year()
 		month := int(prev.Date.Month())
 		key := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC).Format("2006-01")
-		
+
 		// Average if multiple entries in same month
 		if existing, ok := monthlyRates[key]; ok {
 			monthlyRates[key] = (existing + dailyRate) / 2
@@ -173,7 +173,7 @@ func aggregateElectricity(entries []models.ConsumptionEntry) map[int][]MonthlyDa
 		t, _ = time.Parse("2006-01", key)
 		year := t.Year()
 		month := int(t.Month())
-		
+
 		result[year] = append(result[year], MonthlyDataPoint{
 			Year:  year,
 			Month: month,
@@ -209,7 +209,7 @@ func aggregateWater(entries []models.ConsumptionEntry) map[int][]MonthlyDataPoin
 	for i := 1; i < len(waterEntries); i++ {
 		prev := waterEntries[i-1]
 		curr := waterEntries[i]
-		
+
 		if prev.Date.Year() != curr.Date.Year() {
 			continue
 		}
@@ -226,7 +226,7 @@ func aggregateWater(entries []models.ConsumptionEntry) map[int][]MonthlyDataPoin
 		year := prev.Date.Year()
 		month := int(prev.Date.Month())
 		key := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC).Format("2006-01")
-		
+
 		if existing, ok := monthlyRates[key]; ok {
 			monthlyRates[key] = (existing + dailyRate) / 2
 		} else {
@@ -239,7 +239,7 @@ func aggregateWater(entries []models.ConsumptionEntry) map[int][]MonthlyDataPoin
 		t, _ = time.Parse("2006-01", key)
 		year := t.Year()
 		month := int(t.Month())
-		
+
 		result[year] = append(result[year], MonthlyDataPoint{
 			Year:  year,
 			Month: month,
@@ -274,7 +274,7 @@ func aggregateFuel(entries []models.ConsumptionEntry) map[int][]MonthlyDataPoint
 	for i := 1; i < len(fuelEntries); i++ {
 		prev := fuelEntries[i-1]
 		curr := fuelEntries[i]
-		
+
 		if prev.Date.Year() != curr.Date.Year() {
 			continue
 		}
@@ -291,7 +291,7 @@ func aggregateFuel(entries []models.ConsumptionEntry) map[int][]MonthlyDataPoint
 		year := prev.Date.Year()
 		month := int(prev.Date.Month())
 		key := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC).Format("2006-01")
-		
+
 		if existing, ok := monthlyRates[key]; ok {
 			monthlyRates[key] = (existing + dailyRate) / 2
 		} else {
@@ -304,7 +304,7 @@ func aggregateFuel(entries []models.ConsumptionEntry) map[int][]MonthlyDataPoint
 		t, _ = time.Parse("2006-01", key)
 		year := t.Year()
 		month := int(t.Month())
-		
+
 		result[year] = append(result[year], MonthlyDataPoint{
 			Year:  year,
 			Month: month,
@@ -319,4 +319,10 @@ func aggregateFuel(entries []models.ConsumptionEntry) map[int][]MonthlyDataPoint
 	}
 
 	return result
+}
+
+// ChartJSHandler serves the chart.js file
+func ChartJSHandler(w http.ResponseWriter, r *http.Request) {
+	chartJSPath := filepath.Join("web", "templates", "chart.js")
+	http.ServeFile(w, r, chartJSPath)
 }
