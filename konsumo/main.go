@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 	"os"
@@ -9,6 +10,9 @@ import (
 )
 
 func main() {
+	addr := flag.String("addr", ":8080", "IP address and port to listen on (e.g., :8080, 0.0.0.0:8080, localhost:3000)")
+	flag.Parse()
+
 	os.MkdirAll("data", os.ModePerm)
 
 	http.HandleFunc("/", web.HomeHandler)
@@ -16,6 +20,8 @@ func main() {
 	http.HandleFunc("/chart.js", web.ChartJSHandler)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static"))))
 
-	log.Println("Running on http://localhost:8080")
-	http.ListenAndServe(":8080", nil)
+	log.Printf("Running on http://%s", *addr)
+	if err := http.ListenAndServe(*addr, nil); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
+	}
 }
