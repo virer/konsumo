@@ -7,19 +7,22 @@ on:
 permissions:
     contents: write
     packages: write
-
+     
 jobs:
-  release-linux-amd64:
-    name: release linux/amd64
+  releases-matrix:
+    name: Release Go Binary
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: linux
+        goarch: [ amd64, arm64 ]
     steps:
     - uses: actions/checkout@v4
     - uses: wangyoucao577/go-release-action@v1
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        goos: linux
-        goarch: [ amd64, arm64 ]
+        goos: ${{ matrix.goos }}
+        goarch: ${{ matrix.goarch }}
         project_path: "./konsumo"
         binary_name: "konsumo"
-        extra_files: LICENSE README.md
-       
+        extra_files: LICENSE README.md     
