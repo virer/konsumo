@@ -50,16 +50,19 @@
   <div id="tab-electricity" class="tab-content active">
     <h2>Electricity Usage</h2>
     <canvas id="electricityChart"></canvas>
+    <div id="electricityLatest" style="margin-top: 20px; padding: 15px; background-color: #f5f5f5; border-radius: 5px;"></div>
   </div>
   
   <div id="tab-water" class="tab-content">
     <h2>Water Usage</h2>
     <canvas id="waterChart"></canvas>
+    <div id="waterLatest" style="margin-top: 20px; padding: 15px; background-color: #f5f5f5; border-radius: 5px;"></div>
   </div>
   
   <div id="tab-fuel" class="tab-content">
     <h2>Fuel Usage</h2>
     <canvas id="fuelChart"></canvas>
+    <div id="fuelLatest" style="margin-top: 20px; padding: 15px; background-color: #f5f5f5; border-radius: 5px;"></div>
   </div>
   
   <div id="tab-form" class="tab-content">
@@ -313,6 +316,64 @@
         }
       }
     });
+
+    // Display latest data points
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+
+    function formatNumber(num) {
+      return num.toFixed(2);
+    }
+
+    // Electricity latest data (3 latest entries)
+    if (chartData.latest_electricity && chartData.latest_electricity.length > 0) {
+      let html = '<h3>Latest 3 Data Points:</h3>';
+      chartData.latest_electricity.forEach((point, index) => {
+        const dateStr = formatDate(point.date);
+        const valueStr = formatNumber(point.value);
+        const dailyStr = formatNumber(point.daily_consumption);
+        html += `<div style="margin-bottom: 10px; padding: 10px; background-color: white; border-left: 3px solid #36A2EB;">
+          <strong>${index + 1}. Date:</strong> ${dateStr}<br>
+          <strong>Reading:</strong> ${valueStr} kWh (Day + Night)<br>
+          <strong>Daily Consumption:</strong> ${dailyStr} kWh/day
+        </div>`;
+      });
+      document.getElementById("electricityLatest").innerHTML = html;
+    }
+
+    // Water latest data (3 latest entries)
+    if (chartData.latest_water && chartData.latest_water.length > 0) {
+      let html = '<h3>Latest 3 Data Points:</h3>';
+      chartData.latest_water.forEach((point, index) => {
+        const dateStr = formatDate(point.date);
+        const valueStr = formatNumber(point.value);
+        const dailyStr = formatNumber(point.daily_consumption);
+        html += `<div style="margin-bottom: 10px; padding: 10px; background-color: white; border-left: 3px solid #4BC0C0;">
+          <strong>${index + 1}. Date:</strong> ${dateStr}<br>
+          <strong>Reading:</strong> ${valueStr} L<br>
+          <strong>Daily Consumption:</strong> ${dailyStr} L/day
+        </div>`;
+      });
+      document.getElementById("waterLatest").innerHTML = html;
+    }
+
+    // Fuel latest data (3 latest entries)
+    if (chartData.latest_fuel && chartData.latest_fuel.length > 0) {
+      let html = '<h3>Latest 3 Data Points:</h3>';
+      chartData.latest_fuel.forEach((point, index) => {
+        const dateStr = formatDate(point.date);
+        const valueStr = formatNumber(point.value);
+        const dailyStr = formatNumber(point.daily_consumption);
+        html += `<div style="margin-bottom: 10px; padding: 10px; background-color: white; border-left: 3px solid #FFCE56;">
+          <strong>${index + 1}. Date:</strong> ${dateStr}<br>
+          <strong>Reading:</strong> ${valueStr} L<br>
+          <strong>Daily Consumption:</strong> ${dailyStr} L/day
+        </div>`;
+      });
+      document.getElementById("fuelLatest").innerHTML = html;
+    }
 
   </script>
   

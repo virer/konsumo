@@ -21,12 +21,22 @@ type MonthlyDataPoint struct {
 	Rate  float64 `json:"rate"`  // daily rate for that month
 }
 
+// LatestDataPoint represents the latest entry and daily consumption for a category
+type LatestDataPoint struct {
+	Date            time.Time `json:"date"`
+	Value           float64   `json:"value"`
+	DailyConsumption float64  `json:"daily_consumption"`
+}
+
 // ChartData contains aggregated data for charts
 type ChartData struct {
-	Entries     []models.ConsumptionEntry  `json:"entries"`
-	Electricity map[int][]MonthlyDataPoint `json:"electricity"` // year -> monthly points
-	Water       map[int][]MonthlyDataPoint `json:"water"`       // year -> monthly points
-	Fuel        map[int][]MonthlyDataPoint `json:"fuel"`        // year -> monthly points
+	Entries           []models.ConsumptionEntry  `json:"entries"`
+	Electricity       map[int][]MonthlyDataPoint `json:"electricity"` // year -> monthly points
+	Water             map[int][]MonthlyDataPoint `json:"water"`       // year -> monthly points
+	Fuel              map[int][]MonthlyDataPoint `json:"fuel"`        // year -> monthly points
+	LatestElectricity []LatestDataPoint          `json:"latest_electricity,omitempty"`
+	LatestWater       []LatestDataPoint          `json:"latest_water,omitempty"`
+	LatestFuel        []LatestDataPoint          `json:"latest_fuel,omitempty"`
 }
 
 var funcMap = template.FuncMap{
@@ -47,10 +57,13 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Aggregate data by month
 	chartData := ChartData{
-		Entries:     entries,
-		Electricity: aggregateElectricity(entries),
-		Water:       aggregateWater(entries),
-		Fuel:        aggregateFuel(entries),
+		Entries:           entries,
+		Electricity:       aggregateElectricity(entries),
+		Water:             aggregateWater(entries),
+		Fuel:              aggregateFuel(entries),
+		LatestElectricity: getLatestElectricity(entries),
+		LatestWater:       getLatestWater(entries),
+		LatestFuel:        getLatestFuel(entries),
 	}
 
 	tmplPath := filepath.Join("web", "templates", "index.html")
@@ -316,6 +329,235 @@ func aggregateFuel(entries []models.ConsumptionEntry) map[int][]MonthlyDataPoint
 		sort.Slice(result[year], func(i, j int) bool {
 			return result[year][i].Month < result[year][j].Month
 		})
+	}
+
+	return result
+}
+
+// getLatestElectricity returns the 3 latest electricity entries and daily consumption
+func getLatestElectricity(entries []models.ConsumptionEntry) []LatestDataPoint {
+	electricityEntries := []models.ConsumptionEntry{}
+	for _, e := range entries {
+		if e.Category == "electricity" {
+			electricityEntries = append(electricityEntries, e)
+		}
+	}
+	if len(electricityEntries) < 2 {
+		return nil
+	}
+	sort.Slice(electricityEntries, func(i, j int) bool {
+		return electricityEntries[i].Date.Before(electricityEntries[j].Date)
+	})
+
+	result := []LatestDataPoint{}
+	// Need at least 4 entries to show 3 data points (each needs a previous entry)
+	if len(electricityEntries) < 4 {
+		// If we have 2-3 entries, show what we can
+		if len(electricityEntries) >= 2 {
+			for i := 1; i < len(electricityEntries); i++ {
+				curr := electricityEntries[i]
+				prev := electricityEntries[i-1]
+
+				days := curr.Date.Sub(prev.Date).Hours() / 24
+				if days <= 0 {
+					continue
+				}
+
+				prevTotal := prev.ElectricityDay + prev.ElectricityNight
+				currTotal := curr.ElectricityDay + curr.ElectricityNight
+				delta := currTotal - prevTotal
+				dailyRate := delta / days
+
+				result = append(result, LatestDataPoint{
+					Date:             curr.Date,
+					Value:            currTotal,
+					DailyConsumption: dailyRate,
+				})
+			}
+			// Reverse to show most recent first
+			for i, j := 0, len(result)-1; i < j; i, j = i+1, j-1 {
+				result[i], result[j] = result[j], result[i]
+			}
+		}
+		return result
+	}
+
+	// Get the last 3 data points (need 4 entries total: last 3 + 1 previous)
+	// Process from len-3 to len-1 (3 entries), each calculated from previous
+	for i := len(electricityEntries) - 3; i < len(electricityEntries); i++ {
+		curr := electricityEntries[i]
+		prev := electricityEntries[i-1]
+
+		days := curr.Date.Sub(prev.Date).Hours() / 24
+		if days <= 0 {
+			continue
+		}
+
+		prevTotal := prev.ElectricityDay + prev.ElectricityNight
+		currTotal := curr.ElectricityDay + curr.ElectricityNight
+		delta := currTotal - prevTotal
+		dailyRate := delta / days
+
+		result = append(result, LatestDataPoint{
+			Date:             curr.Date,
+			Value:            currTotal,
+			DailyConsumption: dailyRate,
+		})
+	}
+
+	// Reverse to show most recent first
+	for i, j := 0, len(result)-1; i < j; i, j = i+1, j-1 {
+		result[i], result[j] = result[j], result[i]
+	}
+
+	return result
+}
+
+// getLatestWater returns the 3 latest water entries and daily consumption
+func getLatestWater(entries []models.ConsumptionEntry) []LatestDataPoint {
+	waterEntries := []models.ConsumptionEntry{}
+	for _, e := range entries {
+		if e.Category == "water" {
+			waterEntries = append(waterEntries, e)
+		}
+	}
+	if len(waterEntries) < 2 {
+		return nil
+	}
+	sort.Slice(waterEntries, func(i, j int) bool {
+		return waterEntries[i].Date.Before(waterEntries[j].Date)
+	})
+
+	result := []LatestDataPoint{}
+	// Need at least 4 entries to show 3 data points (each needs a previous entry)
+	if len(waterEntries) < 4 {
+		// If we have 2-3 entries, show what we can
+		if len(waterEntries) >= 2 {
+			for i := 1; i < len(waterEntries); i++ {
+				curr := waterEntries[i]
+				prev := waterEntries[i-1]
+
+				days := curr.Date.Sub(prev.Date).Hours() / 24
+				if days <= 0 {
+					continue
+				}
+
+				delta := curr.Water - prev.Water
+				dailyRate := delta / days
+
+				result = append(result, LatestDataPoint{
+					Date:             curr.Date,
+					Value:            curr.Water,
+					DailyConsumption: dailyRate,
+				})
+			}
+			// Reverse to show most recent first
+			for i, j := 0, len(result)-1; i < j; i, j = i+1, j-1 {
+				result[i], result[j] = result[j], result[i]
+			}
+		}
+		return result
+	}
+
+	// Get the last 3 data points (need 4 entries total: last 3 + 1 previous)
+	// Process from len-3 to len-1 (3 entries), each calculated from previous
+	for i := len(waterEntries) - 3; i < len(waterEntries); i++ {
+		curr := waterEntries[i]
+		prev := waterEntries[i-1]
+
+		days := curr.Date.Sub(prev.Date).Hours() / 24
+		if days <= 0 {
+			continue
+		}
+
+		delta := curr.Water - prev.Water
+		dailyRate := delta / days
+
+		result = append(result, LatestDataPoint{
+			Date:             curr.Date,
+			Value:            curr.Water,
+			DailyConsumption: dailyRate,
+		})
+	}
+
+	// Reverse to show most recent first
+	for i, j := 0, len(result)-1; i < j; i, j = i+1, j-1 {
+		result[i], result[j] = result[j], result[i]
+	}
+
+	return result
+}
+
+// getLatestFuel returns the 3 latest fuel entries and daily consumption
+func getLatestFuel(entries []models.ConsumptionEntry) []LatestDataPoint {
+	fuelEntries := []models.ConsumptionEntry{}
+	for _, e := range entries {
+		if e.Category == "fuel" {
+			fuelEntries = append(fuelEntries, e)
+		}
+	}
+	if len(fuelEntries) < 2 {
+		return nil
+	}
+	sort.Slice(fuelEntries, func(i, j int) bool {
+		return fuelEntries[i].Date.Before(fuelEntries[j].Date)
+	})
+
+	result := []LatestDataPoint{}
+	// Need at least 4 entries to show 3 data points (each needs a previous entry)
+	if len(fuelEntries) < 4 {
+		// If we have 2-3 entries, show what we can
+		if len(fuelEntries) >= 2 {
+			for i := 1; i < len(fuelEntries); i++ {
+				curr := fuelEntries[i]
+				prev := fuelEntries[i-1]
+
+				days := curr.Date.Sub(prev.Date).Hours() / 24
+				if days <= 0 {
+					continue
+				}
+
+				delta := prev.Gasoline - curr.Gasoline // tank got smaller
+				dailyRate := delta / days
+
+				result = append(result, LatestDataPoint{
+					Date:             curr.Date,
+					Value:            curr.Gasoline,
+					DailyConsumption: dailyRate,
+				})
+			}
+			// Reverse to show most recent first
+			for i, j := 0, len(result)-1; i < j; i, j = i+1, j-1 {
+				result[i], result[j] = result[j], result[i]
+			}
+		}
+		return result
+	}
+
+	// Get the last 3 data points (need 4 entries total: last 3 + 1 previous)
+	// Process from len-3 to len-1 (3 entries), each calculated from previous
+	for i := len(fuelEntries) - 3; i < len(fuelEntries); i++ {
+		curr := fuelEntries[i]
+		prev := fuelEntries[i-1]
+
+		days := curr.Date.Sub(prev.Date).Hours() / 24
+		if days <= 0 {
+			continue
+		}
+
+		delta := prev.Gasoline - curr.Gasoline // tank got smaller
+		dailyRate := delta / days
+
+		result = append(result, LatestDataPoint{
+			Date:             curr.Date,
+			Value:            curr.Gasoline,
+			DailyConsumption: dailyRate,
+		})
+	}
+
+	// Reverse to show most recent first
+	for i, j := 0, len(result)-1; i < j; i, j = i+1, j-1 {
+		result[i], result[j] = result[j], result[i]
 	}
 
 	return result
