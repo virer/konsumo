@@ -23,9 +23,9 @@ type MonthlyDataPoint struct {
 
 // LatestDataPoint represents the latest entry and daily consumption for a category
 type LatestDataPoint struct {
-	Date            time.Time `json:"date"`
-	Value           float64   `json:"value"`
-	DailyConsumption float64  `json:"daily_consumption"`
+	Date             time.Time `json:"date"`
+	Value            float64   `json:"value"`
+	DailyConsumption float64   `json:"daily_consumption"`
 }
 
 // ChartData contains aggregated data for charts
@@ -66,7 +66,7 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 		LatestFuel:        getLatestFuel(entries),
 	}
 
-	tmplPath := filepath.Join("web", "templates", "index.html")
+	tmplPath := filepath.Join("ui", "templates", "index.html")
 	tmpl := template.New("index.html").Funcs(funcMap)
 	tmpl, err = tmpl.ParseFiles(tmplPath)
 	if err != nil {

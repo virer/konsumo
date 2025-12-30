@@ -17,7 +17,7 @@ func main() {
 
 	http.HandleFunc("/", web.HomeHandler)
 	http.HandleFunc("/submit", web.SubmitHandler)
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static"))))
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("ui/assets"))))
 
 	log.Printf("Running on http://%s", *addr)
 	if err := http.ListenAndServe(*addr, nil); err != nil {
