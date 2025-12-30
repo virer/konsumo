@@ -320,9 +320,3 @@ func aggregateFuel(entries []models.ConsumptionEntry) map[int][]MonthlyDataPoint
 
 	return result
 }
-
-// ChartJSHandler serves the chart.js file
-func ChartJSHandler(w http.ResponseWriter, r *http.Request) {
-	chartJSPath := filepath.Join("web", "templates", "chart.js")
-	http.ServeFile(w, r, chartJSPath)
-}

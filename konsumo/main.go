@@ -17,7 +17,6 @@ func main() {
 
 	http.HandleFunc("/", web.HomeHandler)
 	http.HandleFunc("/submit", web.SubmitHandler)
-	http.HandleFunc("/chart.js", web.ChartJSHandler)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("web/static"))))
 
 	log.Printf("Running on http://%s", *addr)
