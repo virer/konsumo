@@ -25,4 +25,4 @@ jobs:
         goarch: ${{ matrix.goarch }}
         project_path: "./konsumo"
         binary_name: "konsumo"
-        extra_files: LICENSE README.md web/templates/index.html web/static/chart.js
+        extra_files: LICENSE README.md web/
