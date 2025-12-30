@@ -19,7 +19,7 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         goos: linux
         goarch: [ amd64, arm64 ]
-          project_path: "./konsumo"
-          binary_name: "konsumo"
-          extra_files: LICENSE README.md
+        project_path: "./konsumo"
+        binary_name: "konsumo"
+        extra_files: LICENSE README.md
        
