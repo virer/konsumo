@@ -329,9 +329,7 @@
     
     // Transform fuel datasets to use heating month positions
     const fuelDataByYear = chartData.fuel || {};
-    // Sort years numerically instead of as strings
-    const fuelYears = Object.keys(fuelDataByYear).map(y => parseInt(y)).sort((a, b) => a - b).map(y => String(y));
-    const fuelDatasetsTransformed = fuelYears.map((year, idx) => {
+    const fuelDatasetsTransformed = Object.keys(fuelDataByYear).sort().map((year, idx) => {
       const yearData = fuelDataByYear[year] || [];
       return {
         label: year,
