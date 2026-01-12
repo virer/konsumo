@@ -80,20 +80,28 @@
       </select><br>
 
       <div id="waterFields" style="display: none;">
-        Water (L): <input type="number" step="0.01" name="water"><br>
+        Water (L): <input type="number" step="0.01" name="water" id="waterInput"><br>
+        <div id="waterLatestEntry" style="margin-top: 10px; padding: 10px; background-color: #e8f4f8; border-radius: 5px; font-size: 0.9em; display: none;"></div>
       </div>
 
       <div id="electricityFields" style="display: none;">
-        Electricity Day (kWh): <input type="number" step="0.01" name="electricity_day"><br>
-        Electricity Night (kWh): <input type="number" step="0.01" name="electricity_night"><br>
+        Electricity Day (kWh): <input type="number" step="0.01" name="electricity_day" id="electricityDayInput"><br>
+        Electricity Night (kWh): <input type="number" step="0.01" name="electricity_night" id="electricityNightInput"><br>
+        <div id="electricityLatestEntry" style="margin-top: 10px; padding: 10px; background-color: #e8f4f8; border-radius: 5px; font-size: 0.9em; display: none;"></div>
       </div>
 
       <div id="fuelFields" style="display: none;">
-        Gasoline (L): <input type="number" step="0.01" name="gasoline"><br>
+        Gasoline (L): <input type="number" step="0.01" name="gasoline" id="gasolineInput"><br>
+        <div id="fuelLatestEntry" style="margin-top: 10px; padding: 10px; background-color: #e8f4f8; border-radius: 5px; font-size: 0.9em; display: none;"></div>
       </div>
 
       <button type="submit">Submit</button>
     </form>
+
+    <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #ccc;">
+      <h3>Last 10 Recorded Values</h3>
+      <div id="last10Entries" style="margin-top: 15px;"></div>
+    </div>
   </div>
 
 
@@ -112,6 +120,7 @@
       if (category) {
         const categorySelect = document.getElementById("categorySelect");
         categorySelect.value = category;
+        onCategoryChange(); // Trigger to show latest entry
       }
       
       if (tab === "form") {
@@ -124,6 +133,38 @@
       document.getElementById("waterFields").style.display = (category === "water") ? "block" : "none";
       document.getElementById("electricityFields").style.display = (category === "electricity") ? "block" : "none";
       document.getElementById("fuelFields").style.display = (category === "fuel") ? "block" : "none";
+      
+      // Show latest entry for selected category
+      if (category && chartData.latest_entry && chartData.latest_entry[category]) {
+        const latestEntry = chartData.latest_entry[category];
+        const dateStr = formatDate(latestEntry.date);
+        let html = '<strong>Latest Entry:</strong> ';
+        
+        if (category === "water") {
+          html += `Date: ${dateStr}, Water: ${formatNumber(latestEntry.water)} L`;
+          document.getElementById("waterLatestEntry").innerHTML = html;
+          document.getElementById("waterLatestEntry").style.display = "block";
+          document.getElementById("electricityLatestEntry").style.display = "none";
+          document.getElementById("fuelLatestEntry").style.display = "none";
+        } else if (category === "electricity") {
+          html += `Date: ${dateStr}, Day: ${formatNumber(latestEntry.electricity_day)} kWh, Night: ${formatNumber(latestEntry.electricity_night)} kWh`;
+          document.getElementById("electricityLatestEntry").innerHTML = html;
+          document.getElementById("electricityLatestEntry").style.display = "block";
+          document.getElementById("waterLatestEntry").style.display = "none";
+          document.getElementById("fuelLatestEntry").style.display = "none";
+        } else if (category === "fuel") {
+          html += `Date: ${dateStr}, Gasoline: ${formatNumber(latestEntry.gasoline)} L`;
+          document.getElementById("fuelLatestEntry").innerHTML = html;
+          document.getElementById("fuelLatestEntry").style.display = "block";
+          document.getElementById("waterLatestEntry").style.display = "none";
+          document.getElementById("electricityLatestEntry").style.display = "none";
+        }
+      } else {
+        // Hide all latest entry displays
+        document.getElementById("waterLatestEntry").style.display = "none";
+        document.getElementById("electricityLatestEntry").style.display = "none";
+        document.getElementById("fuelLatestEntry").style.display = "none";
+      }
     }
   
     // Tab switching logic
@@ -274,43 +315,12 @@
       }
     });
 
-    // Fuel chart - European heating period (August to July)
-    // Helper function to convert heating month (1-12) to calendar month
-    function heatingMonthToCalendarMonth(heatingMonth) {
-      if (heatingMonth <= 5) {
-        return heatingMonth + 7; // 1->8 (Aug), 2->9 (Sep), 3->10 (Oct), 4->11 (Nov), 5->12 (Dec)
-      }
-      return heatingMonth - 5; // 6->1 (Jan), 7->2 (Feb), 8->3 (Mar), 9->4 (Apr), 10->5 (May), 11->6 (Jun), 12->7 (Jul)
-    }
-    
-    // Helper function to convert calendar month to heating month position
-    function calendarMonthToHeatingMonth(calendarMonth) {
-      if (calendarMonth >= 8) {
-        return calendarMonth - 7; // Aug=1, Sep=2, Oct=3, Nov=4, Dec=5
-      }
-      return calendarMonth + 5; // Jan=6, Feb=7, Mar=8, Apr=9, May=10, Jun=11, Jul=12
-    }
-    
-    // Transform fuel datasets to use heating month positions
-    const fuelDataByYear = chartData.fuel || {};
-    const fuelDatasetsTransformed = Object.keys(fuelDataByYear).sort().map((year, idx) => {
-      const yearData = fuelDataByYear[year] || [];
-      return {
-        label: year,
-        data: yearData.map(point => ({
-          x: calendarMonthToHeatingMonth(point.month),
-          y: point.rate
-        })),
-        borderColor: yearColors[(2 + idx) % yearColors.length],
-        fill: false,
-        borderWidth: 2
-      };
-    });
-    
+    // Fuel chart - Calendar year (January to December)
+    const fuelDatasets = createDatasets(chartData.fuel || {}, 2);
     new Chart(document.getElementById("fuelChart"), {
       type: "line",
       data: {
-        datasets: fuelDatasetsTransformed
+        datasets: fuelDatasets
       },
       options: {
         responsive: true,
@@ -322,17 +332,16 @@
             position: "bottom",
             title: {
               display: true,
-              text: "Month (Heating Period)"
+              text: "Month"
             },
             min: 1,
             max: 12,
             ticks: {
               stepSize: 1,
               callback: function(value) {
-                const heatingMonth = Math.round(value);
-                if (heatingMonth >= 1 && heatingMonth <= 12) {
-                  const calendarMonth = heatingMonthToCalendarMonth(heatingMonth);
-                  return monthNames[calendarMonth - 1];
+                const month = Math.round(value);
+                if (month >= 1 && month <= 12) {
+                  return monthNames[month - 1];
                 }
                 return "";
               }
@@ -364,12 +373,14 @@
       let html = '<h3>Latest 5 Data Points:</h3>';
       chartData.latest_electricity.forEach((point, index) => {
         const dateStr = formatDate(point.date);
-        const valueStr = formatNumber(point.value);
-        const dailyStr = formatNumber(point.daily_consumption);
+        const dayValueStr = formatNumber(point.day_value);
+        const nightValueStr = formatNumber(point.night_value);
+        const dayDailyStr = formatNumber(point.day_daily_consumption);
+        const nightDailyStr = formatNumber(point.night_daily_consumption);
         html += `<div style="margin-bottom: 10px; padding: 10px; background-color: white; border-left: 3px solid #36A2EB;">
           <strong>${index + 1}. Date:</strong> ${dateStr}<br>
-          <strong>Reading:</strong> ${valueStr} kWh (Day + Night)<br>
-          <strong>Daily Consumption:</strong> ${dailyStr} kWh/day
+          <strong>Day Reading:</strong> ${dayValueStr} kWh | <strong>Daily:</strong> ${dayDailyStr} kWh/day<br>
+          <strong>Night Reading:</strong> ${nightValueStr} kWh | <strong>Daily:</strong> ${nightDailyStr} kWh/day
         </div>`;
       });
       document.getElementById("electricityLatest").innerHTML = html;
@@ -406,6 +417,52 @@
       });
       document.getElementById("fuelLatest").innerHTML = html;
     }
+
+    // Display last 10 entries in form tab
+    function displayLast10Entries() {
+      const entries = chartData.last_10_entries || [];
+      const container = document.getElementById("last10Entries");
+      
+      if (entries.length === 0) {
+        container.innerHTML = '<p style="color: #666; font-style: italic;">No entries recorded yet.</p>';
+        return;
+      }
+
+      let html = '<div style="display: flex; flex-direction: column; gap: 10px;">';
+      entries.forEach((entry, index) => {
+        const dateStr = formatDate(entry.date);
+        let categoryColor = '#999';
+        let categoryLabel = entry.category.charAt(0).toUpperCase() + entry.category.slice(1);
+        let details = '';
+        
+        if (entry.category === 'water') {
+          categoryColor = '#36A2EB';
+          details = `Water: ${formatNumber(entry.water)} L`;
+        } else if (entry.category === 'electricity') {
+          categoryColor = '#FFCE56';
+          details = `Day: ${formatNumber(entry.electricity_day)} kWh, Night: ${formatNumber(entry.electricity_night)} kWh`;
+        } else if (entry.category === 'fuel') {
+          categoryColor = '#E74C3C';
+          details = `Gasoline: ${formatNumber(entry.gasoline)} L`;
+        }
+
+        html += `<div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background-color: white; border-left: 4px solid ${categoryColor}; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+          <div style="flex: 1;">
+            <strong style="color: ${categoryColor};">${categoryLabel}</strong> - ${dateStr}<br>
+            <span style="color: #666; font-size: 0.9em;">${details}</span>
+          </div>
+          <form method="POST" action="/delete" style="margin: 0; display: inline-block;" onsubmit="return confirm('Are you sure you want to delete this entry?');">
+            <input type="hidden" name="index" value="${index}">
+            <button type="submit" style="background-color: #ff4444; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.9em;">Delete</button>
+          </form>
+        </div>`;
+      });
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    // Call on page load
+    displayLast10Entries();
 
   </script>
   

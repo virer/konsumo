@@ -26,6 +26,11 @@ type LatestDataPoint struct {
 	Date             time.Time `json:"date"`
 	Value            float64   `json:"value"`
 	DailyConsumption float64   `json:"daily_consumption"`
+	// For electricity, separate day and night values
+	DayValue              float64 `json:"day_value,omitempty"`
+	NightValue            float64 `json:"night_value,omitempty"`
+	DayDailyConsumption   float64 `json:"day_daily_consumption,omitempty"`
+	NightDailyConsumption float64 `json:"night_daily_consumption,omitempty"`
 }
 
 // ChartData contains aggregated data for charts
@@ -37,6 +42,10 @@ type ChartData struct {
 	LatestElectricity []LatestDataPoint          `json:"latest_electricity,omitempty"`
 	LatestWater       []LatestDataPoint          `json:"latest_water,omitempty"`
 	LatestFuel        []LatestDataPoint          `json:"latest_fuel,omitempty"`
+	// Latest entries for form display
+	LatestEntry map[string]models.ConsumptionEntry `json:"latest_entry,omitempty"` // category -> latest entry
+	// Last 10 entries for form tab
+	Last10Entries []models.ConsumptionEntry `json:"last_10_entries,omitempty"`
 }
 
 var funcMap = template.FuncMap{
@@ -64,6 +73,8 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 		LatestElectricity: getLatestElectricity(entries),
 		LatestWater:       getLatestWater(entries),
 		LatestFuel:        getLatestFuel(entries),
+		LatestEntry:       getLatestEntries(entries),
+		Last10Entries:     getLast10Entries(entries),
 	}
 
 	tmplPath := filepath.Join("ui", "templates", "index.html")
@@ -125,6 +136,77 @@ func SubmitHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/?tab=form&category="+category, http.StatusSeeOther)
 }
 
+// DeleteHandler handles deletion of an entry by index
+func DeleteHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Invalid form data", http.StatusBadRequest)
+		return
+	}
+
+	// Get the index from the form
+	indexStr := r.FormValue("index")
+	index, err := strconv.Atoi(indexStr)
+	if err != nil || index < 0 {
+		http.Error(w, "Invalid index", http.StatusBadRequest)
+		return
+	}
+
+	// Load entries
+	entries, err := storage.LoadData()
+	if err != nil {
+		log.Printf("Error loading data: %v", err)
+		http.Error(w, "Unable to load data", http.StatusInternalServerError)
+		return
+	}
+
+	// Sort entries by date descending to match the order shown in the form
+	sorted := make([]models.ConsumptionEntry, len(entries))
+	copy(sorted, entries)
+	sort.Slice(sorted, func(i, j int) bool {
+		return sorted[i].Date.After(sorted[j].Date)
+	})
+
+	// Check if index is valid
+	if index >= len(sorted) {
+		http.Error(w, "Index out of range", http.StatusBadRequest)
+		return
+	}
+
+	// Find the entry to delete in the original entries array
+	entryToDelete := sorted[index]
+
+	// Remove the entry from the original entries array
+	newEntries := []models.ConsumptionEntry{}
+	for i, e := range entries {
+		// Compare entries by date and category to find the matching one
+		if e.Date.Equal(entryToDelete.Date) && e.Category == entryToDelete.Category {
+			// Check if it's the same entry by comparing all fields
+			if (e.Category == "water" && e.Water == entryToDelete.Water) ||
+				(e.Category == "electricity" && e.ElectricityDay == entryToDelete.ElectricityDay && e.ElectricityNight == entryToDelete.ElectricityNight) ||
+				(e.Category == "fuel" && e.Gasoline == entryToDelete.Gasoline) {
+				// Skip this entry
+				continue
+			}
+		}
+		newEntries = append(newEntries, entries[i])
+	}
+
+	// Save the updated entries
+	if err := storage.SaveData(newEntries); err != nil {
+		log.Printf("Error saving data: %v", err)
+		http.Error(w, "Failed to save data", http.StatusInternalServerError)
+		return
+	}
+
+	// Redirect back to form tab
+	http.Redirect(w, r, "/?tab=form", http.StatusSeeOther)
+}
+
 func parseFloat(value string) float64 {
 	result, err := strconv.ParseFloat(value, 64)
 	if err != nil {
@@ -152,10 +234,6 @@ func aggregateElectricity(entries []models.ConsumptionEntry) map[int][]MonthlyDa
 	for i := 1; i < len(electricityEntries); i++ {
 		prev := electricityEntries[i-1]
 		curr := electricityEntries[i]
-
-		if prev.Date.Year() != curr.Date.Year() {
-			continue // Skip cross-year calculations
-		}
 
 		days := curr.Date.Sub(prev.Date).Hours() / 24
 		if days <= 0 {
@@ -270,7 +348,7 @@ func aggregateWater(entries []models.ConsumptionEntry) map[int][]MonthlyDataPoin
 }
 
 // aggregateFuel aggregates fuel data by month
-// Groups data by heating year (August to July) instead of calendar year
+// Groups data by calendar year (January to December)
 func aggregateFuel(entries []models.ConsumptionEntry) map[int][]MonthlyDataPoint {
 	fuelEntries := []models.ConsumptionEntry{}
 	for _, e := range entries {
@@ -288,17 +366,6 @@ func aggregateFuel(entries []models.ConsumptionEntry) map[int][]MonthlyDataPoint
 	for i := 1; i < len(fuelEntries); i++ {
 		prev := fuelEntries[i-1]
 		curr := fuelEntries[i]
-
-		// For heating year, we need to handle cross-year periods
-		// A heating year runs from August to July
-		// So August-December belong to the current calendar year's heating period
-		// January-July belong to the next calendar year's heating period
-		prevHeatingYear := getHeatingYear(prev.Date)
-		currHeatingYear := getHeatingYear(curr.Date)
-
-		if prevHeatingYear != currHeatingYear {
-			continue
-		}
 
 		days := curr.Date.Sub(prev.Date).Hours() / 24
 		if days <= 0 {
@@ -323,27 +390,20 @@ func aggregateFuel(entries []models.ConsumptionEntry) map[int][]MonthlyDataPoint
 	for key, rate := range monthlyRates {
 		var t time.Time
 		t, _ = time.Parse("2006-01", key)
+		year := t.Year()
 		month := int(t.Month())
 
-		// Group by heating year: August-December use current year, January-July use previous year
-		heatingYear := getHeatingYear(t)
-
-		result[heatingYear] = append(result[heatingYear], MonthlyDataPoint{
-			Year:  heatingYear,
+		result[year] = append(result[year], MonthlyDataPoint{
+			Year:  year,
 			Month: month,
 			Rate:  rate,
 		})
 	}
 
-	// Sort by heating month order: August (8) first, then 9,10,11,12,1,2,3,4,5,6,7
+	// Sort by month for each year
 	for year := range result {
 		sort.Slice(result[year], func(i, j int) bool {
-			monthI := result[year][i].Month
-			monthJ := result[year][j].Month
-			// Convert to heating month order: Aug=1, Sep=2, ..., Jul=12
-			heatingMonthI := getHeatingMonth(monthI)
-			heatingMonthJ := getHeatingMonth(monthJ)
-			return heatingMonthI < heatingMonthJ
+			return result[year][i].Month < result[year][j].Month
 		})
 	}
 
@@ -404,10 +464,20 @@ func getLatestElectricity(entries []models.ConsumptionEntry) []LatestDataPoint {
 				delta := currTotal - prevTotal
 				dailyRate := delta / days
 
+				// Calculate day and night separately
+				dayDelta := curr.ElectricityDay - prev.ElectricityDay
+				nightDelta := curr.ElectricityNight - prev.ElectricityNight
+				dayDailyRate := dayDelta / days
+				nightDailyRate := nightDelta / days
+
 				result = append(result, LatestDataPoint{
-					Date:             curr.Date,
-					Value:            currTotal,
-					DailyConsumption: dailyRate,
+					Date:                  curr.Date,
+					Value:                 currTotal,
+					DailyConsumption:      dailyRate,
+					DayValue:              curr.ElectricityDay,
+					NightValue:            curr.ElectricityNight,
+					DayDailyConsumption:   dayDailyRate,
+					NightDailyConsumption: nightDailyRate,
 				})
 			}
 			// Reverse to show most recent first
@@ -434,10 +504,20 @@ func getLatestElectricity(entries []models.ConsumptionEntry) []LatestDataPoint {
 		delta := currTotal - prevTotal
 		dailyRate := delta / days
 
+		// Calculate day and night separately
+		dayDelta := curr.ElectricityDay - prev.ElectricityDay
+		nightDelta := curr.ElectricityNight - prev.ElectricityNight
+		dayDailyRate := dayDelta / days
+		nightDailyRate := nightDelta / days
+
 		result = append(result, LatestDataPoint{
-			Date:             curr.Date,
-			Value:            currTotal,
-			DailyConsumption: dailyRate,
+			Date:                  curr.Date,
+			Value:                 currTotal,
+			DailyConsumption:      dailyRate,
+			DayValue:              curr.ElectricityDay,
+			NightValue:            curr.ElectricityNight,
+			DayDailyConsumption:   dayDailyRate,
+			NightDailyConsumption: nightDailyRate,
 		})
 	}
 
@@ -597,4 +677,36 @@ func getLatestFuel(entries []models.ConsumptionEntry) []LatestDataPoint {
 	}
 
 	return result
+}
+
+// getLatestEntries returns the latest entry for each category
+func getLatestEntries(entries []models.ConsumptionEntry) map[string]models.ConsumptionEntry {
+	result := make(map[string]models.ConsumptionEntry)
+
+	// Find latest entry for each category
+	for _, entry := range entries {
+		if existing, ok := result[entry.Category]; !ok || entry.Date.After(existing.Date) {
+			result[entry.Category] = entry
+		}
+	}
+
+	return result
+}
+
+// getLast10Entries returns the last 10 entries sorted by date (most recent first)
+func getLast10Entries(entries []models.ConsumptionEntry) []models.ConsumptionEntry {
+	// Create a copy to avoid modifying the original slice
+	sorted := make([]models.ConsumptionEntry, len(entries))
+	copy(sorted, entries)
+
+	// Sort by date descending (most recent first)
+	sort.Slice(sorted, func(i, j int) bool {
+		return sorted[i].Date.After(sorted[j].Date)
+	})
+
+	// Return last 10 (or all if less than 10)
+	if len(sorted) > 10 {
+		return sorted[:10]
+	}
+	return sorted
 }

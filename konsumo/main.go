@@ -17,6 +17,7 @@ func main() {
 
 	http.HandleFunc("/", web.HomeHandler)
 	http.HandleFunc("/submit", web.SubmitHandler)
+	http.HandleFunc("/delete", web.DeleteHandler)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("ui/assets"))))
 
 	log.Printf("Running on http://%s", *addr)
