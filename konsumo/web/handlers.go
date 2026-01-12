@@ -26,6 +26,11 @@ type LatestDataPoint struct {
 	Date             time.Time `json:"date"`
 	Value            float64   `json:"value"`
 	DailyConsumption float64   `json:"daily_consumption"`
+	// For electricity, separate day and night values
+	DayValue         float64   `json:"day_value,omitempty"`
+	NightValue       float64   `json:"night_value,omitempty"`
+	DayDailyConsumption   float64 `json:"day_daily_consumption,omitempty"`
+	NightDailyConsumption float64 `json:"night_daily_consumption,omitempty"`
 }
 
 // ChartData contains aggregated data for charts
@@ -37,6 +42,8 @@ type ChartData struct {
 	LatestElectricity []LatestDataPoint          `json:"latest_electricity,omitempty"`
 	LatestWater       []LatestDataPoint          `json:"latest_water,omitempty"`
 	LatestFuel        []LatestDataPoint          `json:"latest_fuel,omitempty"`
+	// Latest entries for form display
+	LatestEntry       map[string]models.ConsumptionEntry `json:"latest_entry,omitempty"` // category -> latest entry
 }
 
 var funcMap = template.FuncMap{
@@ -64,6 +71,7 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 		LatestElectricity: getLatestElectricity(entries),
 		LatestWater:       getLatestWater(entries),
 		LatestFuel:        getLatestFuel(entries),
+		LatestEntry:       getLatestEntries(entries),
 	}
 
 	tmplPath := filepath.Join("ui", "templates", "index.html")
@@ -404,10 +412,20 @@ func getLatestElectricity(entries []models.ConsumptionEntry) []LatestDataPoint {
 				delta := currTotal - prevTotal
 				dailyRate := delta / days
 
+				// Calculate day and night separately
+				dayDelta := curr.ElectricityDay - prev.ElectricityDay
+				nightDelta := curr.ElectricityNight - prev.ElectricityNight
+				dayDailyRate := dayDelta / days
+				nightDailyRate := nightDelta / days
+
 				result = append(result, LatestDataPoint{
-					Date:             curr.Date,
-					Value:            currTotal,
-					DailyConsumption: dailyRate,
+					Date:                  curr.Date,
+					Value:                 currTotal,
+					DailyConsumption:      dailyRate,
+					DayValue:              curr.ElectricityDay,
+					NightValue:            curr.ElectricityNight,
+					DayDailyConsumption:   dayDailyRate,
+					NightDailyConsumption: nightDailyRate,
 				})
 			}
 			// Reverse to show most recent first
@@ -434,10 +452,20 @@ func getLatestElectricity(entries []models.ConsumptionEntry) []LatestDataPoint {
 		delta := currTotal - prevTotal
 		dailyRate := delta / days
 
+		// Calculate day and night separately
+		dayDelta := curr.ElectricityDay - prev.ElectricityDay
+		nightDelta := curr.ElectricityNight - prev.ElectricityNight
+		dayDailyRate := dayDelta / days
+		nightDailyRate := nightDelta / days
+
 		result = append(result, LatestDataPoint{
-			Date:             curr.Date,
-			Value:            currTotal,
-			DailyConsumption: dailyRate,
+			Date:                  curr.Date,
+			Value:                 currTotal,
+			DailyConsumption:      dailyRate,
+			DayValue:              curr.ElectricityDay,
+			NightValue:            curr.ElectricityNight,
+			DayDailyConsumption:   dayDailyRate,
+			NightDailyConsumption: nightDailyRate,
 		})
 	}
 
@@ -596,5 +624,19 @@ func getLatestFuel(entries []models.ConsumptionEntry) []LatestDataPoint {
 		result[i], result[j] = result[j], result[i]
 	}
 
+	return result
+}
+
+// getLatestEntries returns the latest entry for each category
+func getLatestEntries(entries []models.ConsumptionEntry) map[string]models.ConsumptionEntry {
+	result := make(map[string]models.ConsumptionEntry)
+	
+	// Find latest entry for each category
+	for _, entry := range entries {
+		if existing, ok := result[entry.Category]; !ok || entry.Date.After(existing.Date) {
+			result[entry.Category] = entry
+		}
+	}
+	
 	return result
 }

@@ -80,16 +80,19 @@
       </select><br>
 
       <div id="waterFields" style="display: none;">
-        Water (L): <input type="number" step="0.01" name="water"><br>
+        Water (L): <input type="number" step="0.01" name="water" id="waterInput"><br>
+        <div id="waterLatestEntry" style="margin-top: 10px; padding: 10px; background-color: #e8f4f8; border-radius: 5px; font-size: 0.9em; display: none;"></div>
       </div>
 
       <div id="electricityFields" style="display: none;">
-        Electricity Day (kWh): <input type="number" step="0.01" name="electricity_day"><br>
-        Electricity Night (kWh): <input type="number" step="0.01" name="electricity_night"><br>
+        Electricity Day (kWh): <input type="number" step="0.01" name="electricity_day" id="electricityDayInput"><br>
+        Electricity Night (kWh): <input type="number" step="0.01" name="electricity_night" id="electricityNightInput"><br>
+        <div id="electricityLatestEntry" style="margin-top: 10px; padding: 10px; background-color: #e8f4f8; border-radius: 5px; font-size: 0.9em; display: none;"></div>
       </div>
 
       <div id="fuelFields" style="display: none;">
-        Gasoline (L): <input type="number" step="0.01" name="gasoline"><br>
+        Gasoline (L): <input type="number" step="0.01" name="gasoline" id="gasolineInput"><br>
+        <div id="fuelLatestEntry" style="margin-top: 10px; padding: 10px; background-color: #e8f4f8; border-radius: 5px; font-size: 0.9em; display: none;"></div>
       </div>
 
       <button type="submit">Submit</button>
@@ -112,6 +115,7 @@
       if (category) {
         const categorySelect = document.getElementById("categorySelect");
         categorySelect.value = category;
+        onCategoryChange(); // Trigger to show latest entry
       }
       
       if (tab === "form") {
@@ -124,6 +128,38 @@
       document.getElementById("waterFields").style.display = (category === "water") ? "block" : "none";
       document.getElementById("electricityFields").style.display = (category === "electricity") ? "block" : "none";
       document.getElementById("fuelFields").style.display = (category === "fuel") ? "block" : "none";
+      
+      // Show latest entry for selected category
+      if (category && chartData.latest_entry && chartData.latest_entry[category]) {
+        const latestEntry = chartData.latest_entry[category];
+        const dateStr = formatDate(latestEntry.date);
+        let html = '<strong>Latest Entry:</strong> ';
+        
+        if (category === "water") {
+          html += `Date: ${dateStr}, Water: ${formatNumber(latestEntry.water)} L`;
+          document.getElementById("waterLatestEntry").innerHTML = html;
+          document.getElementById("waterLatestEntry").style.display = "block";
+          document.getElementById("electricityLatestEntry").style.display = "none";
+          document.getElementById("fuelLatestEntry").style.display = "none";
+        } else if (category === "electricity") {
+          html += `Date: ${dateStr}, Day: ${formatNumber(latestEntry.electricity_day)} kWh, Night: ${formatNumber(latestEntry.electricity_night)} kWh`;
+          document.getElementById("electricityLatestEntry").innerHTML = html;
+          document.getElementById("electricityLatestEntry").style.display = "block";
+          document.getElementById("waterLatestEntry").style.display = "none";
+          document.getElementById("fuelLatestEntry").style.display = "none";
+        } else if (category === "fuel") {
+          html += `Date: ${dateStr}, Gasoline: ${formatNumber(latestEntry.gasoline)} L`;
+          document.getElementById("fuelLatestEntry").innerHTML = html;
+          document.getElementById("fuelLatestEntry").style.display = "block";
+          document.getElementById("waterLatestEntry").style.display = "none";
+          document.getElementById("electricityLatestEntry").style.display = "none";
+        }
+      } else {
+        // Hide all latest entry displays
+        document.getElementById("waterLatestEntry").style.display = "none";
+        document.getElementById("electricityLatestEntry").style.display = "none";
+        document.getElementById("fuelLatestEntry").style.display = "none";
+      }
     }
   
     // Tab switching logic
@@ -293,7 +329,9 @@
     
     // Transform fuel datasets to use heating month positions
     const fuelDataByYear = chartData.fuel || {};
-    const fuelDatasetsTransformed = Object.keys(fuelDataByYear).sort().map((year, idx) => {
+    // Sort years numerically instead of as strings
+    const fuelYears = Object.keys(fuelDataByYear).map(y => parseInt(y)).sort((a, b) => a - b).map(y => String(y));
+    const fuelDatasetsTransformed = fuelYears.map((year, idx) => {
       const yearData = fuelDataByYear[year] || [];
       return {
         label: year,
@@ -364,12 +402,14 @@
       let html = '<h3>Latest 5 Data Points:</h3>';
       chartData.latest_electricity.forEach((point, index) => {
         const dateStr = formatDate(point.date);
-        const valueStr = formatNumber(point.value);
-        const dailyStr = formatNumber(point.daily_consumption);
+        const dayValueStr = formatNumber(point.day_value);
+        const nightValueStr = formatNumber(point.night_value);
+        const dayDailyStr = formatNumber(point.day_daily_consumption);
+        const nightDailyStr = formatNumber(point.night_daily_consumption);
         html += `<div style="margin-bottom: 10px; padding: 10px; background-color: white; border-left: 3px solid #36A2EB;">
           <strong>${index + 1}. Date:</strong> ${dateStr}<br>
-          <strong>Reading:</strong> ${valueStr} kWh (Day + Night)<br>
-          <strong>Daily Consumption:</strong> ${dailyStr} kWh/day
+          <strong>Day Reading:</strong> ${dayValueStr} kWh | <strong>Daily:</strong> ${dayDailyStr} kWh/day<br>
+          <strong>Night Reading:</strong> ${nightValueStr} kWh | <strong>Daily:</strong> ${nightDailyStr} kWh/day
         </div>`;
       });
       document.getElementById("electricityLatest").innerHTML = html;
