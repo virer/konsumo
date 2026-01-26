@@ -18,6 +18,7 @@ import (
 type MonthlyDataPoint struct {
 	Year  int     `json:"year"`
 	Month int     `json:"month"` // 1-12
+	Day   int     `json:"day"`   // day of month for graph positioning
 	Rate  float64 `json:"rate"`  // daily rate for that month
 }
 
@@ -216,7 +217,14 @@ func parseFloat(value string) float64 {
 	return result
 }
 
+// rateWithDay stores a rate calculation with its associated day
+type rateWithDay struct {
+	day  int
+	rate float64
+}
+
 // aggregateElectricity aggregates electricity data by month
+// Creates graph points on specific days: 8, 16, 24 if multiple points, or 10, 20 if only one
 func aggregateElectricity(entries []models.ConsumptionEntry) map[int][]MonthlyDataPoint {
 	electricityEntries := []models.ConsumptionEntry{}
 	for _, e := range entries {
@@ -229,8 +237,10 @@ func aggregateElectricity(entries []models.ConsumptionEntry) map[int][]MonthlyDa
 	})
 
 	result := make(map[int][]MonthlyDataPoint)
-	monthlyRates := make(map[string]float64) // "year-month" -> rate
+	// "year-month" -> []rateWithDay (all rate calculations for that month)
+	monthlyRates := make(map[string][]rateWithDay)
 
+	// Collect all rate calculations grouped by month
 	for i := 1; i < len(electricityEntries); i++ {
 		prev := electricityEntries[i-1]
 		curr := electricityEntries[i]
@@ -248,34 +258,111 @@ func aggregateElectricity(entries []models.ConsumptionEntry) map[int][]MonthlyDa
 		// Assign rate to the previous entry's month (where the consumption period started)
 		year := prev.Date.Year()
 		month := int(prev.Date.Month())
+		day := prev.Date.Day()
 		key := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC).Format("2006-01")
 
-		// Average if multiple entries in same month
-		if existing, ok := monthlyRates[key]; ok {
-			monthlyRates[key] = (existing + dailyRate) / 2
-		} else {
-			monthlyRates[key] = dailyRate
-		}
+		monthlyRates[key] = append(monthlyRates[key], rateWithDay{day: day, rate: dailyRate})
 	}
 
-	// Convert to MonthlyDataPoint structure
-	for key, rate := range monthlyRates {
+	// Create graph points for each month
+	for key, rates := range monthlyRates {
 		var t time.Time
 		t, _ = time.Parse("2006-01", key)
 		year := t.Year()
 		month := int(t.Month())
 
-		result[year] = append(result[year], MonthlyDataPoint{
-			Year:  year,
-			Month: month,
-			Rate:  rate,
-		})
+		graphPoints := []MonthlyDataPoint{}
+
+		if len(rates) == 1 {
+			// Only one data point: create graph points on days 10 and 20
+			rate := rates[0].rate
+			recordedDay := rates[0].day
+
+			// Day 10: use exact rate if recorded day matches, otherwise use the rate
+			if recordedDay == 10 {
+				graphPoints = append(graphPoints, MonthlyDataPoint{
+					Year:  year,
+					Month: month,
+					Day:   10,
+					Rate:  rate,
+				})
+			} else {
+				graphPoints = append(graphPoints, MonthlyDataPoint{
+					Year:  year,
+					Month: month,
+					Day:   10,
+					Rate:  rate, // Use the single rate
+				})
+			}
+
+			// Day 20: use exact rate if recorded day matches, otherwise use the rate
+			if recordedDay == 20 {
+				graphPoints = append(graphPoints, MonthlyDataPoint{
+					Year:  year,
+					Month: month,
+					Day:   20,
+					Rate:  rate,
+				})
+			} else {
+				graphPoints = append(graphPoints, MonthlyDataPoint{
+					Year:  year,
+					Month: month,
+					Day:   20,
+					Rate:  rate, // Use the single rate
+				})
+			}
+		} else {
+			// Multiple data points: create graph points on days 8, 16, 24
+			targetDays := []int{8, 16, 24}
+
+			for _, targetDay := range targetDays {
+				// Check if any recorded day matches the target day
+				var matchedRate *float64
+				for _, r := range rates {
+					if r.day == targetDay {
+						matchedRate = &r.rate
+						break
+					}
+				}
+
+				if matchedRate != nil {
+					// Use exact rate if day matches
+					graphPoints = append(graphPoints, MonthlyDataPoint{
+						Year:  year,
+						Month: month,
+						Day:   targetDay,
+						Rate:  *matchedRate,
+					})
+				} else {
+					// Average all rates for this month
+					sum := 0.0
+					for _, r := range rates {
+						sum += r.rate
+					}
+					avgRate := sum / float64(len(rates))
+					graphPoints = append(graphPoints, MonthlyDataPoint{
+						Year:  year,
+						Month: month,
+						Day:   targetDay,
+						Rate:  avgRate,
+					})
+				}
+			}
+		}
+
+		// Add all graph points for this month
+		for _, point := range graphPoints {
+			result[year] = append(result[year], point)
+		}
 	}
 
-	// Sort by month for each year
+	// Sort by month and day for each year
 	for year := range result {
 		sort.Slice(result[year], func(i, j int) bool {
-			return result[year][i].Month < result[year][j].Month
+			if result[year][i].Month != result[year][j].Month {
+				return result[year][i].Month < result[year][j].Month
+			}
+			return result[year][i].Day < result[year][j].Day
 		})
 	}
 
@@ -283,6 +370,7 @@ func aggregateElectricity(entries []models.ConsumptionEntry) map[int][]MonthlyDa
 }
 
 // aggregateWater aggregates water data by month
+// Creates graph points on specific days: 8, 16, 24 if multiple points, or 10, 20 if only one
 func aggregateWater(entries []models.ConsumptionEntry) map[int][]MonthlyDataPoint {
 	waterEntries := []models.ConsumptionEntry{}
 	for _, e := range entries {
@@ -295,8 +383,10 @@ func aggregateWater(entries []models.ConsumptionEntry) map[int][]MonthlyDataPoin
 	})
 
 	result := make(map[int][]MonthlyDataPoint)
-	monthlyRates := make(map[string]float64)
+	// "year-month" -> []rateWithDay (all rate calculations for that month)
+	monthlyRates := make(map[string][]rateWithDay)
 
+	// Collect all rate calculations grouped by month
 	for i := 1; i < len(waterEntries); i++ {
 		prev := waterEntries[i-1]
 		curr := waterEntries[i]
@@ -316,31 +406,111 @@ func aggregateWater(entries []models.ConsumptionEntry) map[int][]MonthlyDataPoin
 		// Assign rate to the previous entry's month (where the consumption period started)
 		year := prev.Date.Year()
 		month := int(prev.Date.Month())
+		day := prev.Date.Day()
 		key := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC).Format("2006-01")
 
-		if existing, ok := monthlyRates[key]; ok {
-			monthlyRates[key] = (existing + dailyRate) / 2
-		} else {
-			monthlyRates[key] = dailyRate
-		}
+		monthlyRates[key] = append(monthlyRates[key], rateWithDay{day: day, rate: dailyRate})
 	}
 
-	for key, rate := range monthlyRates {
+	// Create graph points for each month
+	for key, rates := range monthlyRates {
 		var t time.Time
 		t, _ = time.Parse("2006-01", key)
 		year := t.Year()
 		month := int(t.Month())
 
-		result[year] = append(result[year], MonthlyDataPoint{
-			Year:  year,
-			Month: month,
-			Rate:  rate,
-		})
+		graphPoints := []MonthlyDataPoint{}
+
+		if len(rates) == 1 {
+			// Only one data point: create graph points on days 10 and 20
+			rate := rates[0].rate
+			recordedDay := rates[0].day
+
+			// Day 10: use exact rate if recorded day matches, otherwise use the rate
+			if recordedDay == 10 {
+				graphPoints = append(graphPoints, MonthlyDataPoint{
+					Year:  year,
+					Month: month,
+					Day:   10,
+					Rate:  rate,
+				})
+			} else {
+				graphPoints = append(graphPoints, MonthlyDataPoint{
+					Year:  year,
+					Month: month,
+					Day:   10,
+					Rate:  rate, // Use the single rate
+				})
+			}
+
+			// Day 20: use exact rate if recorded day matches, otherwise use the rate
+			if recordedDay == 20 {
+				graphPoints = append(graphPoints, MonthlyDataPoint{
+					Year:  year,
+					Month: month,
+					Day:   20,
+					Rate:  rate,
+				})
+			} else {
+				graphPoints = append(graphPoints, MonthlyDataPoint{
+					Year:  year,
+					Month: month,
+					Day:   20,
+					Rate:  rate, // Use the single rate
+				})
+			}
+		} else {
+			// Multiple data points: create graph points on days 8, 16, 24
+			targetDays := []int{8, 16, 24}
+
+			for _, targetDay := range targetDays {
+				// Check if any recorded day matches the target day
+				var matchedRate *float64
+				for _, r := range rates {
+					if r.day == targetDay {
+						matchedRate = &r.rate
+						break
+					}
+				}
+
+				if matchedRate != nil {
+					// Use exact rate if day matches
+					graphPoints = append(graphPoints, MonthlyDataPoint{
+						Year:  year,
+						Month: month,
+						Day:   targetDay,
+						Rate:  *matchedRate,
+					})
+				} else {
+					// Average all rates for this month
+					sum := 0.0
+					for _, r := range rates {
+						sum += r.rate
+					}
+					avgRate := sum / float64(len(rates))
+					graphPoints = append(graphPoints, MonthlyDataPoint{
+						Year:  year,
+						Month: month,
+						Day:   targetDay,
+						Rate:  avgRate,
+					})
+				}
+			}
+		}
+
+		// Add all graph points for this month
+		for _, point := range graphPoints {
+			result[year] = append(result[year], point)
+		}
 	}
 
+	// Sort by month and day for each year
 	for year := range result {
 		sort.Slice(result[year], func(i, j int) bool {
-			return result[year][i].Month < result[year][j].Month
+			if result[year][i].Month != result[year][j].Month {
+				return result[year][i].Month < result[year][j].Month
+			}
+			return result[year][i].Day < result[year][j].Day
 		})
 	}
 
@@ -349,6 +519,7 @@ func aggregateWater(entries []models.ConsumptionEntry) map[int][]MonthlyDataPoin
 
 // aggregateFuel aggregates fuel data by month
 // Groups data by calendar year (January to December)
+// Creates graph points on specific days: 8, 16, 24 if multiple points, or 10, 20 if only one
 func aggregateFuel(entries []models.ConsumptionEntry) map[int][]MonthlyDataPoint {
 	fuelEntries := []models.ConsumptionEntry{}
 	for _, e := range entries {
@@ -361,8 +532,10 @@ func aggregateFuel(entries []models.ConsumptionEntry) map[int][]MonthlyDataPoint
 	})
 
 	result := make(map[int][]MonthlyDataPoint)
-	monthlyRates := make(map[string]float64)
+	// "year-month" -> []rateWithDay (all rate calculations for that month)
+	monthlyRates := make(map[string][]rateWithDay)
 
+	// Collect all rate calculations grouped by month
 	for i := 1; i < len(fuelEntries); i++ {
 		prev := fuelEntries[i-1]
 		curr := fuelEntries[i]
@@ -378,32 +551,111 @@ func aggregateFuel(entries []models.ConsumptionEntry) map[int][]MonthlyDataPoint
 		// Assign rate to the previous entry's month (where the consumption period started)
 		year := prev.Date.Year()
 		month := int(prev.Date.Month())
+		day := prev.Date.Day()
 		key := time.Date(year, time.Month(month), 1, 0, 0, 0, 0, time.UTC).Format("2006-01")
 
-		if existing, ok := monthlyRates[key]; ok {
-			monthlyRates[key] = (existing + dailyRate) / 2
-		} else {
-			monthlyRates[key] = dailyRate
-		}
+		monthlyRates[key] = append(monthlyRates[key], rateWithDay{day: day, rate: dailyRate})
 	}
 
-	for key, rate := range monthlyRates {
+	// Create graph points for each month
+	for key, rates := range monthlyRates {
 		var t time.Time
 		t, _ = time.Parse("2006-01", key)
 		year := t.Year()
 		month := int(t.Month())
 
-		result[year] = append(result[year], MonthlyDataPoint{
-			Year:  year,
-			Month: month,
-			Rate:  rate,
-		})
+		graphPoints := []MonthlyDataPoint{}
+
+		if len(rates) == 1 {
+			// Only one data point: create graph points on days 10 and 20
+			rate := rates[0].rate
+			recordedDay := rates[0].day
+
+			// Day 10: use exact rate if recorded day matches, otherwise use the rate
+			if recordedDay == 10 {
+				graphPoints = append(graphPoints, MonthlyDataPoint{
+					Year:  year,
+					Month: month,
+					Day:   10,
+					Rate:  rate,
+				})
+			} else {
+				graphPoints = append(graphPoints, MonthlyDataPoint{
+					Year:  year,
+					Month: month,
+					Day:   10,
+					Rate:  rate, // Use the single rate
+				})
+			}
+
+			// Day 20: use exact rate if recorded day matches, otherwise use the rate
+			if recordedDay == 20 {
+				graphPoints = append(graphPoints, MonthlyDataPoint{
+					Year:  year,
+					Month: month,
+					Day:   20,
+					Rate:  rate,
+				})
+			} else {
+				graphPoints = append(graphPoints, MonthlyDataPoint{
+					Year:  year,
+					Month: month,
+					Day:   20,
+					Rate:  rate, // Use the single rate
+				})
+			}
+		} else {
+			// Multiple data points: create graph points on days 8, 16, 24
+			targetDays := []int{8, 16, 24}
+
+			for _, targetDay := range targetDays {
+				// Check if any recorded day matches the target day
+				var matchedRate *float64
+				for _, r := range rates {
+					if r.day == targetDay {
+						matchedRate = &r.rate
+						break
+					}
+				}
+
+				if matchedRate != nil {
+					// Use exact rate if day matches
+					graphPoints = append(graphPoints, MonthlyDataPoint{
+						Year:  year,
+						Month: month,
+						Day:   targetDay,
+						Rate:  *matchedRate,
+					})
+				} else {
+					// Average all rates for this month
+					sum := 0.0
+					for _, r := range rates {
+						sum += r.rate
+					}
+					avgRate := sum / float64(len(rates))
+					graphPoints = append(graphPoints, MonthlyDataPoint{
+						Year:  year,
+						Month: month,
+						Day:   targetDay,
+						Rate:  avgRate,
+					})
+				}
+			}
+		}
+
+		// Add all graph points for this month
+		for _, point := range graphPoints {
+			result[year] = append(result[year], point)
+		}
 	}
 
-	// Sort by month for each year
+	// Sort by month and day for each year
 	for year := range result {
 		sort.Slice(result[year], func(i, j int) bool {
-			return result[year][i].Month < result[year][j].Month
+			if result[year][i].Month != result[year][j].Month {
+				return result[year][i].Month < result[year][j].Month
+			}
+			return result[year][i].Day < result[year][j].Day
 		})
 	}
 
