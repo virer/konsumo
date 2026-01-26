@@ -219,7 +219,8 @@
         return {
           label: year,
           data: yearData.map(point => ({
-            x: point.month,
+            // Use month + (day/31) to position points within the month
+            x: point.month + (point.day || 15) / 31,
             y: point.rate
           })),
           borderColor: yearColors[(colorIndex + idx) % yearColors.length],
