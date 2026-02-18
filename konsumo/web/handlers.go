@@ -545,7 +545,10 @@ func aggregateFuel(entries []models.ConsumptionEntry) map[int][]MonthlyDataPoint
 			continue
 		}
 
-		delta := prev.Gasoline - curr.Gasoline // tank got smaller
+		delta := prev.Gasoline - curr.Gasoline // positive = consumption, negative = refuel
+		if delta <= 0 {
+			continue // refuel or no change: only graph consumption (decreases)
+		}
 		dailyRate := delta / days
 
 		// Assign rate to the previous entry's month (where the consumption period started)
@@ -885,7 +888,10 @@ func getLatestFuel(entries []models.ConsumptionEntry) []LatestDataPoint {
 					continue
 				}
 
-				delta := prev.Gasoline - curr.Gasoline // tank got smaller
+				delta := prev.Gasoline - curr.Gasoline // positive = consumption
+				if delta <= 0 {
+					continue // refuel: skip for latest consumption list
+				}
 				dailyRate := delta / days
 
 				result = append(result, LatestDataPoint{
@@ -902,9 +908,9 @@ func getLatestFuel(entries []models.ConsumptionEntry) []LatestDataPoint {
 		return result
 	}
 
-	// Get the last 5 data points (need 6 entries total: last 5 + 1 previous)
-	// Process from len-5 to len-1 (5 entries), each calculated from previous
-	for i := len(fuelEntries) - 5; i < len(fuelEntries); i++ {
+	// Get the last 5 consumption intervals (skip refuels: only delta > 0)
+	allConsumption := []LatestDataPoint{}
+	for i := 1; i < len(fuelEntries); i++ {
 		curr := fuelEntries[i]
 		prev := fuelEntries[i-1]
 
@@ -913,15 +919,24 @@ func getLatestFuel(entries []models.ConsumptionEntry) []LatestDataPoint {
 			continue
 		}
 
-		delta := prev.Gasoline - curr.Gasoline // tank got smaller
+		delta := prev.Gasoline - curr.Gasoline // positive = consumption
+		if delta <= 0 {
+			continue // refuel: skip
+		}
 		dailyRate := delta / days
 
-		result = append(result, LatestDataPoint{
+		allConsumption = append(allConsumption, LatestDataPoint{
 			Date:             curr.Date,
 			Value:            curr.Gasoline,
 			DailyConsumption: dailyRate,
 		})
 	}
+	// Take the last 5 consumption data points
+	start := 0
+	if len(allConsumption) > 5 {
+		start = len(allConsumption) - 5
+	}
+	result = append(result, allConsumption[start:]...)
 
 	// Reverse to show most recent first
 	for i, j := 0, len(result)-1; i < j; i, j = i+1, j-1 {
