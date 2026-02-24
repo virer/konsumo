@@ -63,6 +63,7 @@
     <h2>Fuel Usage</h2>
     <canvas id="fuelChart"></canvas>
     <div id="fuelLatest" style="margin-top: 20px; padding: 15px; background-color: #f5f5f5; border-radius: 5px;"></div>
+    <div id="fuelHeatingProjection" style="margin-top: 20px; padding: 15px; background-color: #fff8e6; border: 1px solid #e6d9b8; border-radius: 5px;"></div>
   </div>
   
   <div id="tab-form" class="tab-content">
@@ -358,6 +359,27 @@
         }
       }
     });
+
+    // Fuel heating period (Sept–June) projection
+    const proj = chartData.fuel_heating_projection;
+    if (proj) {
+      let projHtml = '<h3>Heating period (Sept–June) – fuel projection</h3>';
+      projHtml += `<p><strong>Current period:</strong> ${proj.period_label} (Sept ${new Date(proj.period_start).getFullYear()} – June ${new Date(proj.period_end).getFullYear()})</p>`;
+      projHtml += `<p><strong>Consumed so far:</strong> ${formatNumber(proj.consumed_so_far)} L</p>`;
+      if (proj.has_projection && proj.historical_periods_used > 0) {
+        projHtml += `<p><strong>Historical average</strong> (${proj.historical_periods_used} past period(s)): ${formatNumber(proj.historical_avg_total)} L per heating period</p>`;
+        projHtml += `<p><strong>Projected total this period:</strong> ${formatNumber(proj.projected_total)} L`;
+        if (proj.remaining_months > 0) {
+          projHtml += ` (${formatNumber(proj.remaining_months)} months remaining, extrapolated from average)`;
+        }
+        projHtml += '</p>';
+      } else {
+        projHtml += '<p><em>No complete past heating periods with fuel data yet — projection will appear when you have at least one full Sept–June period.</em></p>';
+      }
+      document.getElementById("fuelHeatingProjection").innerHTML = projHtml;
+    } else {
+      document.getElementById("fuelHeatingProjection").innerHTML = '';
+    }
 
     // Display latest data points
     function formatDate(dateStr) {

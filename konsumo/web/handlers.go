@@ -34,6 +34,19 @@ type LatestDataPoint struct {
 	NightDailyConsumption float64 `json:"night_daily_consumption,omitempty"`
 }
 
+// FuelHeatingProjection holds fuel consumption projection for the current heating period (Sept–June).
+type FuelHeatingProjection struct {
+	PeriodLabel           string    `json:"period_label"`             // e.g. "2025-26"
+	PeriodStart           time.Time `json:"period_start"`             // September 1
+	PeriodEnd             time.Time `json:"period_end"`                // June 30
+	ConsumedSoFar         float64   `json:"consumed_so_far"`          // L consumed in current period
+	HistoricalAvgTotal    float64   `json:"historical_avg_total"`     // average L per full heating period (past years)
+	HistoricalPeriodsUsed int      `json:"historical_periods_used"`   // number of past periods used for average
+	ProjectedTotal        float64   `json:"projected_total"`           // consumed so far + projected rest
+	RemainingMonths       float64   `json:"remaining_months"`          // months left in period (for projection)
+	HasProjection         bool      `json:"has_projection"`            // true if we have historical data to project
+}
+
 // ChartData contains aggregated data for charts
 type ChartData struct {
 	Entries           []models.ConsumptionEntry  `json:"entries"`
@@ -43,6 +56,8 @@ type ChartData struct {
 	LatestElectricity []LatestDataPoint          `json:"latest_electricity,omitempty"`
 	LatestWater       []LatestDataPoint          `json:"latest_water,omitempty"`
 	LatestFuel        []LatestDataPoint          `json:"latest_fuel,omitempty"`
+	// Fuel heating period (Sept–June) projection for current period
+	FuelHeatingProjection *FuelHeatingProjection `json:"fuel_heating_projection,omitempty"`
 	// Latest entries for form display
 	LatestEntry map[string]models.ConsumptionEntry `json:"latest_entry,omitempty"` // category -> latest entry
 	// Last 10 entries for form tab
@@ -67,15 +82,16 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Aggregate data by month
 	chartData := ChartData{
-		Entries:           entries,
-		Electricity:       aggregateElectricity(entries),
-		Water:             aggregateWater(entries),
-		Fuel:              aggregateFuel(entries),
-		LatestElectricity: getLatestElectricity(entries),
-		LatestWater:       getLatestWater(entries),
-		LatestFuel:        getLatestFuel(entries),
-		LatestEntry:       getLatestEntries(entries),
-		Last10Entries:     getLast10Entries(entries),
+		Entries:                entries,
+		Electricity:            aggregateElectricity(entries),
+		Water:                  aggregateWater(entries),
+		Fuel:                   aggregateFuel(entries),
+		LatestElectricity:      getLatestElectricity(entries),
+		LatestWater:            getLatestWater(entries),
+		LatestFuel:             getLatestFuel(entries),
+		FuelHeatingProjection:  getFuelHeatingProjection(entries, time.Now()),
+		LatestEntry:            getLatestEntries(entries),
+		Last10Entries:          getLast10Entries(entries),
 	}
 
 	tmplPath := filepath.Join("ui", "templates", "index.html")
@@ -683,6 +699,118 @@ func getHeatingMonth(month int) int {
 		return month - 7 // Aug=1, Sep=2, Oct=3, Nov=4, Dec=5
 	}
 	return month + 5 // Jan=6, Feb=7, Mar=8, Apr=9, May=10, Jun=11, Jul=12
+}
+
+// Heating period for fuel projection: September (month 9) to June (month 6) of next year.
+// heatingPeriodStart(2024) = Sept 1, 2024; heatingPeriodEnd(2024) = June 30, 2025.
+func heatingPeriodStart(year int) time.Time {
+	return time.Date(year, time.September, 1, 0, 0, 0, 0, time.UTC)
+}
+func heatingPeriodEnd(year int) time.Time {
+	return time.Date(year+1, time.June, 30, 23, 59, 59, 999999999, time.UTC)
+}
+
+// fuelConsumptionInPeriod returns total fuel consumption (L) in [start, end] from consecutive readings.
+// Each positive delta (prev.Gasoline - curr.Gasoline) is attributed to the period where prev.Date falls.
+func fuelConsumptionInPeriod(entries []models.ConsumptionEntry, start, end time.Time) float64 {
+	fuelEntries := []models.ConsumptionEntry{}
+	for _, e := range entries {
+		if e.Category == "fuel" {
+			fuelEntries = append(fuelEntries, e)
+		}
+	}
+	sort.Slice(fuelEntries, func(i, j int) bool {
+		return fuelEntries[i].Date.Before(fuelEntries[j].Date)
+	})
+	var total float64
+	for i := 1; i < len(fuelEntries); i++ {
+		prev := fuelEntries[i-1]
+		curr := fuelEntries[i]
+		delta := prev.Gasoline - curr.Gasoline
+		if delta <= 0 {
+			continue
+		}
+		// Attribute consumption to the period of the start of the interval
+		if !prev.Date.Before(start) && !prev.Date.After(end) {
+			total += delta
+		}
+	}
+	return total
+}
+
+// getFuelHeatingProjection returns projection for the current heating period (Sept–June), fuel only.
+func getFuelHeatingProjection(entries []models.ConsumptionEntry, now time.Time) *FuelHeatingProjection {
+	// Current heating period: Sept (this year) to June (next year). If we're in Jan–June, period started last Sept.
+	var currentYear int
+	if now.Month() >= time.September {
+		currentYear = now.Year()
+	} else {
+		currentYear = now.Year() - 1
+	}
+	start := heatingPeriodStart(currentYear)
+	end := heatingPeriodEnd(currentYear)
+
+	consumedSoFar := fuelConsumptionInPeriod(entries, start, end)
+
+	// Historical complete periods: only past periods that have ended (before today)
+	var historicalTotals []float64
+	for y := currentYear - 1; y >= currentYear-10; y-- {
+		pe := heatingPeriodEnd(y)
+		if !pe.Before(now) {
+			continue // period not yet ended, skip
+		}
+		ps := heatingPeriodStart(y)
+		total := fuelConsumptionInPeriod(entries, ps, pe)
+		if total > 0 {
+			historicalTotals = append(historicalTotals, total)
+		}
+	}
+
+	var historicalAvg float64
+	n := len(historicalTotals)
+	if n > 0 {
+		sum := 0.0
+		for _, t := range historicalTotals {
+			sum += t
+		}
+		historicalAvg = sum / float64(n)
+	}
+
+	// Remaining full months from next month through June (inclusive)
+	var remainingMonths float64
+	if now.After(end) {
+		remainingMonths = 0
+	} else if now.Before(start) {
+		remainingMonths = 10 // full period ahead (Sept–June)
+	} else if now.Month() >= time.September {
+		remainingMonths = float64(18 - int(now.Month())) // e.g. Sept -> 9 months left (Oct..Jun)
+	} else {
+		remainingMonths = float64(6 - int(now.Month())) // Jan->5, Feb->4, ..., Jun->0
+	}
+
+	projectedTotal := consumedSoFar
+	if n > 0 && remainingMonths > 0 {
+		avgMonthly := historicalAvg / 10.0 // 10 months Sept–June
+		projectedTotal = consumedSoFar + avgMonthly*remainingMonths
+	}
+
+	nextYearShort := (currentYear + 1) % 100
+	periodLabel := strconv.Itoa(currentYear) + "-" + strconv.Itoa(nextYearShort)
+	if nextYearShort < 10 {
+		periodLabel = strconv.Itoa(currentYear) + "-0" + strconv.Itoa(nextYearShort)
+	}
+
+	return &FuelHeatingProjection{
+		PeriodLabel:           periodLabel,
+		PeriodStart:           start,
+		PeriodEnd:             end,
+		ConsumedSoFar:         consumedSoFar,
+		HistoricalAvgTotal:    historicalAvg,
+		HistoricalPeriodsUsed: n,
+		ProjectedTotal:        projectedTotal,
+		RemainingMonths:       remainingMonths,
+		HasProjection:         n > 0,
+	}
 }
 
 // getLatestElectricity returns the 5 latest electricity entries and daily consumption
