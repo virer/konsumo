@@ -82,7 +82,7 @@
       </select><br>
 
       <div id="waterFields" style="display: none;">
-        Water (L): <input type="number" step="0.01" name="water" id="waterInput"><br>
+        Water (m³): <input type="number" step="0.01" name="water" id="waterInput"><br>
         <div id="waterLatestEntry" style="margin-top: 10px; padding: 10px; background-color: #e8f4f8; border-radius: 5px; font-size: 0.9em; display: none;"></div>
       </div>
 
@@ -143,7 +143,7 @@
         let html = '<strong>Latest Entry:</strong> ';
         
         if (category === "water") {
-          html += `Date: ${dateStr}, Water: ${formatNumber(latestEntry.water)} L`;
+          html += `Date: ${dateStr}, Water: ${formatNumber(latestEntry.water)} m³`;
           document.getElementById("waterLatestEntry").innerHTML = html;
           document.getElementById("waterLatestEntry").style.display = "block";
           document.getElementById("electricityLatestEntry").style.display = "none";
@@ -311,7 +311,7 @@
             beginAtZero: true,
             title: {
               display: true,
-              text: "Liters/Day"
+              text: "m³/Day"
             }
           }
         }
@@ -431,8 +431,8 @@
         const dailyStr = formatNumber(point.daily_consumption);
         html += `<div style="margin-bottom: 10px; padding: 10px; background-color: white; border-left: 3px solid #4BC0C0;">
           <strong>${index + 1}. Date:</strong> ${dateStr}<br>
-          <strong>Reading:</strong> ${valueStr} L<br>
-          <strong>Daily Consumption:</strong> ${dailyStr} L/day
+          <strong>Reading:</strong> ${valueStr} m³<br>
+          <strong>Daily Consumption:</strong> ${dailyStr} m³/day
         </div>`;
       });
       document.getElementById("waterLatest").innerHTML = html;
@@ -473,7 +473,7 @@
         
         if (entry.category === 'water') {
           categoryColor = '#36A2EB';
-          details = `Water: ${formatNumber(entry.water)} L`;
+          details = `Water: ${formatNumber(entry.water)} m³`;
         } else if (entry.category === 'electricity') {
           categoryColor = '#FFCE56';
           details = `Day: ${formatNumber(entry.electricity_day)} kWh, Night: ${formatNumber(entry.electricity_night)} kWh`;
