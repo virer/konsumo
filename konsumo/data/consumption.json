@@ -30,6 +30,36 @@
     "water": 361
   },
   {
+    "date": "2022-01-09T00:00:00Z",
+    "category": "water",
+    "water": 365
+  },
+  {
+    "date": "2022-06-04T00:00:00Z",
+    "category": "water",
+    "water": 414
+  },
+  {
+    "date": "2022-09-19T00:00:00Z",
+    "category": "water",
+    "water": 452
+  },
+  {
+    "date": "2022-10-18T00:00:00Z",
+    "category": "water",
+    "water": 461
+  },
+  {
+    "date": "2022-11-19T00:00:00Z",
+    "category": "water",
+    "water": 472
+  },
+  {
+    "date": "2022-12-22T00:00:00Z",
+    "category": "water",
+    "water": 482
+  },
+  {
     "date": "2023-01-18T00:00:00Z",
     "category": "water",
     "water": 492
@@ -795,42 +825,322 @@
     "electricity_day": 18393,
     "electricity_night": 22296
   },
-{ "date": "2023-10-01T00:00:00Z", "category": "fuel", "gasoline": 1658 },
-{ "date": "2023-10-10T00:00:00Z", "category": "fuel", "gasoline": 1644 },
-{ "date": "2023-10-21T00:00:00Z", "category": "fuel", "gasoline": 1618 },
-{ "date": "2023-12-18T00:00:00Z", "category": "fuel", "gasoline": 1220 },
-{ "date": "2023-11-21T00:00:00Z", "category": "fuel", "gasoline": 1460 },
-{ "date": "2023-12-23T00:00:00Z", "category": "fuel", "gasoline": 1170 },
-{ "date": "2024-01-13T00:00:00Z", "category": "fuel", "gasoline": 980 },
-{ "date": "2024-01-21T00:00:00Z", "category": "fuel", "gasoline": 875 },
-{ "date": "2024-01-31T00:00:00Z", "category": "fuel", "gasoline": 800 },
-{ "date": "2024-02-08T00:00:00Z", "category": "fuel", "gasoline": 750 },
-{ "date": "2024-02-17T00:00:00Z", "category": "fuel", "gasoline": 700 },
-{ "date": "2024-03-11T00:00:00Z", "category": "fuel", "gasoline": 560 },
-{ "date": "2024-03-19T00:00:00Z", "category": "fuel", "gasoline": 520 },
-{ "date": "2024-04-08T00:00:00Z", "category": "fuel", "gasoline": 430 },
-{ "date": "2024-04-17T00:00:00Z", "category": "fuel", "gasoline": 415 },
-{ "date": "2024-04-23T00:00:00Z", "category": "fuel", "gasoline": 380 },
-{ "date": "2024-05-01T00:00:00Z", "category": "fuel", "gasoline": 340 },
-{ "date": "2024-05-10T00:00:00Z", "category": "fuel", "gasoline": 320 },
-{ "date": "2024-06-10T00:00:00Z", "category": "fuel", "gasoline": 320 },
-{ "date": "2024-06-10T00:00:00Z", "category": "fuel", "gasoline": 1805 },
-{ "date": "2024-09-09T00:00:00Z", "category": "fuel", "gasoline": 1805 },
-{ "date": "2024-09-14T00:00:00Z", "category": "fuel", "gasoline": 1799 },
-{ "date": "2024-10-02T00:00:00Z", "category": "fuel", "gasoline": 1775 },
-{ "date": "2024-10-07T00:00:00Z", "category": "fuel", "gasoline": 1760 },
-{ "date": "2024-10-12T00:00:00Z", "category": "fuel", "gasoline": 1743 },
-{ "date": "2024-11-06T00:00:00Z", "category": "fuel", "gasoline": 1660 },
-{ "date": "2024-11-18T00:00:00Z", "category": "fuel", "gasoline": 1597 },
-{ "date": "2024-12-10T00:00:00Z", "category": "fuel", "gasoline": 1410 },
-{ "date": "2024-12-23T00:00:00Z", "category": "fuel", "gasoline": 1300 },
-{ "date": "2025-01-14T00:00:00Z", "category": "fuel", "gasoline": 1040 },
-{ "date": "2025-01-31T00:00:00Z", "category": "fuel", "gasoline": 880 },
-{ "date": "2025-02-17T00:00:00Z", "category": "fuel", "gasoline": 700 },
-{ "date": "2025-03-04T00:00:00Z", "category": "fuel", "gasoline": 570 },
-{ "date": "2025-03-19T00:00:00Z", "category": "fuel", "gasoline": 480 },
-{ "date": "2025-04-03T00:00:00Z", "category": "fuel", "gasoline": 2000 },
-{ "date": "2025-04-07T00:00:00Z", "category": "fuel", "gasoline": 1990 },
-{ "date": "2025-05-01T00:00:00Z", "category": "fuel", "gasoline": 1937 },
-{ "date": "2025-06-02T00:00:00Z", "category": "fuel", "gasoline": 1920 }
+  {
+    "date": "2023-10-01T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1658
+  },
+  {
+    "date": "2023-10-10T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1644
+  },
+  {
+    "date": "2023-10-21T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1618
+  },
+  {
+    "date": "2023-12-18T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1220
+  },
+  {
+    "date": "2023-11-21T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1460
+  },
+  {
+    "date": "2023-12-23T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1170
+  },
+  {
+    "date": "2024-01-13T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 980
+  },
+  {
+    "date": "2024-01-21T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 875
+  },
+  {
+    "date": "2024-01-31T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 800
+  },
+  {
+    "date": "2024-02-08T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 750
+  },
+  {
+    "date": "2024-02-17T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 700
+  },
+  {
+    "date": "2024-03-11T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 560
+  },
+  {
+    "date": "2024-03-19T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 520
+  },
+  {
+    "date": "2024-04-08T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 430
+  },
+  {
+    "date": "2024-04-17T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 415
+  },
+  {
+    "date": "2024-04-23T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 380
+  },
+  {
+    "date": "2024-05-01T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 340
+  },
+  {
+    "date": "2024-05-10T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 320
+  },
+  {
+    "date": "2024-06-10T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 320
+  },
+  {
+    "date": "2024-06-10T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1805
+  },
+  {
+    "date": "2024-09-09T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1805
+  },
+  {
+    "date": "2024-09-14T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1799
+  },
+  {
+    "date": "2024-10-02T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1775
+  },
+  {
+    "date": "2024-10-07T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1760
+  },
+  {
+    "date": "2024-10-12T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1743
+  },
+  {
+    "date": "2024-11-06T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1660
+  },
+  {
+    "date": "2024-11-18T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1597
+  },
+  {
+    "date": "2024-12-10T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1410
+  },
+  {
+    "date": "2024-12-23T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1300
+  },
+  {
+    "date": "2025-01-14T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1040
+  },
+  {
+    "date": "2025-01-31T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 880
+  },
+  {
+    "date": "2025-02-17T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 700
+  },
+  {
+    "date": "2025-03-04T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 570
+  },
+  {
+    "date": "2025-03-19T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 480
+  },
+  {
+    "date": "2025-04-03T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 2000
+  },
+  {
+    "date": "2025-04-07T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1990
+  },
+  {
+    "date": "2025-05-01T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1937
+  },
+  {
+    "date": "2025-06-02T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1920
+  },
+  {
+    "date": "2026-02-28T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1835
+  },
+  {
+    "date": "2026-02-28T00:00:00Z",
+    "category": "water",
+    "water": 952
+  },
+  {
+    "date": "2026-02-28T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 18416,
+    "electricity_night": 22342
+  },
+  {
+    "date": "2026-03-02T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 18426,
+    "electricity_night": 22367
+  },
+  {
+    "date": "2026-03-02T00:00:00Z",
+    "category": "water",
+    "water": 953
+  },
+  {
+    "date": "2026-03-02T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1820
+  },
+  {
+    "date": "2026-03-10T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1800
+  },
+  {
+    "date": "2026-03-10T00:00:00Z",
+    "category": "water",
+    "water": 956
+  },
+  {
+    "date": "2026-03-10T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 18455,
+    "electricity_night": 22429
+  },
+  {
+    "date": "2026-03-17T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1760
+  },
+  {
+    "date": "2026-03-17T00:00:00Z",
+    "category": "water",
+    "water": 959
+  },
+  {
+    "date": "2026-03-17T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 18493,
+    "electricity_night": 22500
+  },
+  {
+    "date": "2026-03-21T00:00:00Z",
+    "category": "water",
+    "water": 961
+  },
+  {
+    "date": "2026-03-21T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1740
+  },
+  {
+    "date": "2026-03-21T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 18506,
+    "electricity_night": 22530
+  },
+  {
+    "date": "2026-03-28T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1720
+  },
+  {
+    "date": "2026-03-28T00:00:00Z",
+    "category": "water",
+    "water": 963
+  },
+  {
+    "date": "2026-03-28T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 18532,
+    "electricity_night": 22583
+  },
+  {
+    "date": "2026-04-07T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1680
+  },
+  {
+    "date": "2026-04-07T00:00:00Z",
+    "category": "water",
+    "water": 968
+  },
+  {
+    "date": "2026-04-07T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 18568,
+    "electricity_night": 22676
+  },
+  {
+    "date": "2026-04-12T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 18587,
+    "electricity_night": 22714
+  },
+  {
+    "date": "2026-04-12T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1660
+  },
+  {
+    "date": "2026-04-12T00:00:00Z",
+    "category": "water",
+    "water": 970
+  }
 ]

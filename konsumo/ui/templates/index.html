@@ -58,6 +58,7 @@
     <h2>Water Usage</h2>
     <canvas id="waterChart"></canvas>
     <div id="waterLatest" style="margin-top: 20px; padding: 15px; background-color: #f5f5f5; border-radius: 5px;"></div>
+    <div id="waterYearSummary" style="margin-top: 20px; padding: 15px; background-color: #fff8e6; border: 1px solid #e6d9b8; border-radius: 5px;"></div>
   </div>
   
   <div id="tab-fuel" class="tab-content">
@@ -195,6 +196,15 @@
     // Get pre-aggregated data from backend
     const chartData = {{ marshal . }};
     const entries = chartData.entries || [];
+
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+
+    function formatNumber(num) {
+      return num.toFixed(2);
+    }
     
     // Month names for labels
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -232,134 +242,144 @@
       });
     }
     
-    // Electricity chart
-    const electricityDatasets = createDatasets(chartData.electricity || {}, 0);
-    new Chart(document.getElementById("electricityChart"), {
-      type: "line",
-      data: {
-        datasets: electricityDatasets
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        aspectRatio: 2,
-        scales: {
-          x: {
-            type: "linear",
-            position: "bottom",
-            title: {
-              display: true,
-              text: "Month"
-            },
-            min: 1,
-            max: 12,
-            ticks: {
-              stepSize: 1,
-              callback: function(value) {
-                const month = Math.round(value);
-                if (month >= 1 && month <= 12) {
-                  return monthNames[month - 1];
+    // Charts: isolate failures so summary/latest panels still render (e.g. empty datasets).
+    try {
+      const electricityDatasets = createDatasets(chartData.electricity || {}, 0);
+      new Chart(document.getElementById("electricityChart"), {
+        type: "line",
+        data: {
+          datasets: electricityDatasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          aspectRatio: 2,
+          scales: {
+            x: {
+              type: "linear",
+              position: "bottom",
+              title: {
+                display: true,
+                text: "Month"
+              },
+              min: 1,
+              max: 12,
+              ticks: {
+                stepSize: 1,
+                callback: function(value) {
+                  const month = Math.round(value);
+                  if (month >= 1 && month <= 12) {
+                    return monthNames[month - 1];
+                  }
+                  return "";
                 }
-                return "";
               }
-            }
-          },
-          y: {
-            beginAtZero: true,
-            title: {
-              display: true,
-              text: "kWh/Day"
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: "kWh/Day"
+              }
             }
           }
         }
-      }
-    });
-  
-    // Water chart
-    const waterDatasets = createDatasets(chartData.water || {}, 1);
-    new Chart(document.getElementById("waterChart"), {
-      type: "line",
-      data: {
-        datasets: waterDatasets
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        aspectRatio: 2,
-        scales: {
-          x: {
-            type: "linear",
-            position: "bottom",
-            title: {
-              display: true,
-              text: "Month"
-            },
-            min: 1,
-            max: 12,
-            ticks: {
-              stepSize: 1,
-              callback: function(value) {
-                const month = Math.round(value);
-                if (month >= 1 && month <= 12) {
-                  return monthNames[month - 1];
-                }
-                return "";
-              }
-            }
-          },
-          y: {
-            beginAtZero: true,
-            title: {
-              display: true,
-              text: "m³/Day"
-            }
-          }
-        }
-      }
-    });
+      });
+    } catch (e) {
+      console.error("Electricity chart failed:", e);
+    }
 
-    // Fuel chart - Calendar year (January to December)
-    const fuelDatasets = createDatasets(chartData.fuel || {}, 2);
-    new Chart(document.getElementById("fuelChart"), {
-      type: "line",
-      data: {
-        datasets: fuelDatasets
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        aspectRatio: 2,
-        scales: {
-          x: {
-            type: "linear",
-            position: "bottom",
-            title: {
-              display: true,
-              text: "Month"
-            },
-            min: 1,
-            max: 12,
-            ticks: {
-              stepSize: 1,
-              callback: function(value) {
-                const month = Math.round(value);
-                if (month >= 1 && month <= 12) {
-                  return monthNames[month - 1];
+    try {
+      const waterDatasets = createDatasets(chartData.water || {}, 1);
+      new Chart(document.getElementById("waterChart"), {
+        type: "line",
+        data: {
+          datasets: waterDatasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          aspectRatio: 2,
+          scales: {
+            x: {
+              type: "linear",
+              position: "bottom",
+              title: {
+                display: true,
+                text: "Month"
+              },
+              min: 1,
+              max: 12,
+              ticks: {
+                stepSize: 1,
+                callback: function(value) {
+                  const month = Math.round(value);
+                  if (month >= 1 && month <= 12) {
+                    return monthNames[month - 1];
+                  }
+                  return "";
                 }
-                return "";
               }
-            }
-          },
-          y: {
-            beginAtZero: true,
-            title: {
-              display: true,
-              text: "Liters/Day"
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: "m³/Day"
+              }
             }
           }
         }
-      }
-    });
+      });
+    } catch (e) {
+      console.error("Water chart failed:", e);
+    }
+
+    try {
+      const fuelDatasets = createDatasets(chartData.fuel || {}, 2);
+      new Chart(document.getElementById("fuelChart"), {
+        type: "line",
+        data: {
+          datasets: fuelDatasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          aspectRatio: 2,
+          scales: {
+            x: {
+              type: "linear",
+              position: "bottom",
+              title: {
+                display: true,
+                text: "Month"
+              },
+              min: 1,
+              max: 12,
+              ticks: {
+                stepSize: 1,
+                callback: function(value) {
+                  const month = Math.round(value);
+                  if (month >= 1 && month <= 12) {
+                    return monthNames[month - 1];
+                  }
+                  return "";
+                }
+              }
+            },
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: "Liters/Day"
+              }
+            }
+          }
+        }
+      });
+    } catch (e) {
+      console.error("Fuel chart failed:", e);
+    }
 
     // Fuel heating period (Sept–June) projection
     const proj = chartData.fuel_heating_projection;
@@ -380,16 +400,6 @@
       document.getElementById("fuelHeatingProjection").innerHTML = projHtml;
     } else {
       document.getElementById("fuelHeatingProjection").innerHTML = '';
-    }
-
-    // Display latest data points
-    function formatDate(dateStr) {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-    }
-
-    function formatNumber(num) {
-      return num.toFixed(2);
     }
 
     // Electricity latest data (5 latest entries)
@@ -436,6 +446,21 @@
         </div>`;
       });
       document.getElementById("waterLatest").innerHTML = html;
+    }
+
+    // Water 1-year summary: last 12 months total (m³)
+    const waterSummary = chartData.water_year_summary;
+    const waterReadingCount = (chartData.entries || []).filter(e => e.category === 'water').length;
+    if (waterSummary) {
+      const lastEndStr = formatDate(waterSummary.last_12_months_end);
+      let html = '<h3>Water – 1 year summary</h3>';
+      html += `<p><strong>Last 12 months</strong> (to ${lastEndStr}): <strong>${formatNumber(waterSummary.last_12_months_total)} m³</strong></p>`;
+      document.getElementById("waterYearSummary").innerHTML = html;
+    } else if (waterReadingCount < 2) {
+      document.getElementById("waterYearSummary").innerHTML =
+        '<h3>Water – 1 year summary</h3><p>Add at least two water meter readings to see total consumption over the last 12 months.</p>';
+    } else {
+      document.getElementById("waterYearSummary").innerHTML = '';
     }
 
     // Fuel latest data (5 latest entries)
