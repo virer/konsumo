@@ -420,14 +420,22 @@
       document.getElementById("electricityLatest").innerHTML = html;
     }
 
-    // Electricity 1-year summary: last 12 months total + split day/night
+    // Electricity summary: up to 3 rolling 12-month periods (only with available data)
     const elecSummary = chartData.electricity_year_summary;
-    if (elecSummary) {
-      const lastEndStr = formatDate(elecSummary.last_12_months_end);
-      let html = '<h3>Electricity – 1 year summary</h3>';
-      html += `<p><strong>Last 12 months</strong> (to ${lastEndStr}): <strong>${formatNumber(elecSummary.last_12_months_total)} kWh</strong></p>`;
-      html += `<p style="margin-top: 8px; padding-left: 12px;">Day: ${formatNumber(elecSummary.last_12_months_day)} kWh &nbsp;|&nbsp; Night: ${formatNumber(elecSummary.last_12_months_night)} kWh</p>`;
+    const elecReadingCount = (chartData.entries || []).filter(e => e.category === 'electricity').length;
+    if (elecSummary && Array.isArray(elecSummary.past_years) && elecSummary.past_years.length > 0) {
+      let html = '<h3>Electricity – consumption summary (up to 3 years)</h3>';
+      elecSummary.past_years.forEach((period, index) => {
+        const periodStartStr = formatDate(period.period_start);
+        const periodEndStr = formatDate(period.period_end);
+        const periodLabel = index === 0 ? 'Last 12 months' : `Previous ${index} year${index > 1 ? 's' : ''}`;
+        html += `<p><strong>${periodLabel}</strong> (${periodStartStr} → ${periodEndStr}): <strong>${formatNumber(period.total)} kWh</strong></p>`;
+        html += `<p style="margin-top: 4px; padding-left: 12px;">Day: ${formatNumber(period.day)} kWh &nbsp;|&nbsp; Night: ${formatNumber(period.night)} kWh</p>`;
+      });
       document.getElementById("electricityHeatingProjection").innerHTML = html;
+    } else if (elecReadingCount < 2) {
+      document.getElementById("electricityHeatingProjection").innerHTML =
+        '<h3>Electricity – consumption summary (up to 3 years)</h3><p>Add at least two electricity meter readings to see yearly consumption.</p>';
     } else {
       document.getElementById("electricityHeatingProjection").innerHTML = '';
     }

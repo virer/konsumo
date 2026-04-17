@@ -47,12 +47,22 @@ type FuelHeatingProjection struct {
 	HasProjection         bool      `json:"has_projection"`          // true if we have historical data to project
 }
 
+// ElectricityPeriodSummary holds kWh for one rolling 12-month window (by meter-reading dates).
+type ElectricityPeriodSummary struct {
+	PeriodStart time.Time `json:"period_start"` // inclusive start of 12-month period
+	PeriodEnd   time.Time `json:"period_end"`   // inclusive end (anchor date)
+	Total       float64   `json:"total"`        // kWh (day + night) in this period
+	Day         float64   `json:"day"`          // kWh day
+	Night       float64   `json:"night"`        // kWh night
+}
+
 // ElectricityYearSummary holds electricity last 12 months (1-year period), total and split day/night.
 type ElectricityYearSummary struct {
-	Last12MonthsTotal float64   `json:"last_12_months_total"` // kWh in the 12 months to last data
-	Last12MonthsDay   float64   `json:"last_12_months_day"`   // kWh day in that period
-	Last12MonthsNight float64   `json:"last_12_months_night"` // kWh night in that period
-	Last12MonthsEnd   time.Time `json:"last_12_months_end"`   // date of last electricity reading
+	Last12MonthsTotal float64                    `json:"last_12_months_total"` // kWh in the 12 months to last data
+	Last12MonthsDay   float64                    `json:"last_12_months_day"`   // kWh day in that period
+	Last12MonthsNight float64                    `json:"last_12_months_night"` // kWh night in that period
+	Last12MonthsEnd   time.Time                  `json:"last_12_months_end"`   // date of last electricity reading
+	PastYears         []ElectricityPeriodSummary `json:"past_years,omitempty"` // up to 3 rolling annual periods with data
 }
 
 // WaterYearSummary holds water consumption (m³) for the last 12 months to last encoded reading.
@@ -840,61 +850,28 @@ func getFuelHeatingProjection(entries []models.ConsumptionEntry, now time.Time) 
 	}
 }
 
-// electricityConsumptionInPeriod returns total electricity consumption (kWh, day+night) in [start, end].
-// Each delta (curr - prev) is attributed to the period where prev.Date falls.
-func electricityConsumptionInPeriod(entries []models.ConsumptionEntry, start, end time.Time) float64 {
-	elecEntries := []models.ConsumptionEntry{}
-	for _, e := range entries {
-		if e.Category == "electricity" {
-			elecEntries = append(elecEntries, e)
-		}
-	}
-	sort.Slice(elecEntries, func(i, j int) bool {
-		return elecEntries[i].Date.Before(elecEntries[j].Date)
-	})
-	var total float64
-	for i := 1; i < len(elecEntries); i++ {
-		prev := elecEntries[i-1]
-		curr := elecEntries[i]
-		prevTotal := prev.ElectricityDay + prev.ElectricityNight
-		currTotal := curr.ElectricityDay + curr.ElectricityNight
-		delta := currTotal - prevTotal
-		if delta <= 0 {
-			continue
-		}
-		if !prev.Date.Before(start) && !prev.Date.After(end) {
-			total += delta
-		}
-	}
-	return total
-}
-
-// electricityConsumptionInPeriodDayNight returns day and night kWh in [start, end] (attribution by prev.Date).
-func electricityConsumptionInPeriodDayNight(entries []models.ConsumptionEntry, start, end time.Time) (dayKWh, nightKWh float64) {
-	elecEntries := []models.ConsumptionEntry{}
-	for _, e := range entries {
-		if e.Category == "electricity" {
-			elecEntries = append(elecEntries, e)
-		}
-	}
-	sort.Slice(elecEntries, func(i, j int) bool {
-		return elecEntries[i].Date.Before(elecEntries[j].Date)
-	})
+// electricityPeriodTotalsSorted returns kWh totals for [start, end] (attribution by prev.Date).
+// elecEntries must be sorted ascending by date and contain only electricity category rows.
+func electricityPeriodTotalsSorted(elecEntries []models.ConsumptionEntry, start, end time.Time) (total, dayKWh, nightKWh float64, hasData bool) {
 	for i := 1; i < len(elecEntries); i++ {
 		prev := elecEntries[i-1]
 		curr := elecEntries[i]
 		if !prev.Date.Before(start) && !prev.Date.After(end) {
-			dayDelta := curr.ElectricityDay - prev.ElectricityDay
-			nightDelta := curr.ElectricityNight - prev.ElectricityNight
-			if dayDelta > 0 {
-				dayKWh += dayDelta
+			hasData = true
+			prevTotal := prev.ElectricityDay + prev.ElectricityNight
+			currTotal := curr.ElectricityDay + curr.ElectricityNight
+			if d := currTotal - prevTotal; d > 0 {
+				total += d
 			}
-			if nightDelta > 0 {
-				nightKWh += nightDelta
+			if d := curr.ElectricityDay - prev.ElectricityDay; d > 0 {
+				dayKWh += d
+			}
+			if d := curr.ElectricityNight - prev.ElectricityNight; d > 0 {
+				nightKWh += d
 			}
 		}
 	}
-	return dayKWh, nightKWh
+	return total, dayKWh, nightKWh, hasData
 }
 
 // getElectricityYearSummary returns last 12 months total and split by day/night.
@@ -913,16 +890,38 @@ func getElectricityYearSummary(entries []models.ConsumptionEntry) *ElectricityYe
 	})
 	lastDate := elecEntries[len(elecEntries)-1].Date
 
-	// Last 12 months ending on last encoded data
-	windowStart := lastDate.AddDate(-1, 0, 0)
-	last12Total := electricityConsumptionInPeriod(entries, windowStart, lastDate)
-	last12Day, last12Night := electricityConsumptionInPeriodDayNight(entries, windowStart, lastDate)
+	pastYears := make([]ElectricityPeriodSummary, 0, 3)
+	var last12Total, last12Day, last12Night float64
+
+	for i := 0; i < 3; i++ {
+		periodEnd := lastDate.AddDate(-i, 0, 0)
+		periodStart := periodEnd.AddDate(-1, 0, 0)
+		tot, d, n, ok := electricityPeriodTotalsSorted(elecEntries, periodStart, periodEnd)
+		if !ok {
+			continue
+		}
+		if i == 0 {
+			last12Total, last12Day, last12Night = tot, d, n
+		}
+		pastYears = append(pastYears, ElectricityPeriodSummary{
+			PeriodStart: periodStart,
+			PeriodEnd:   periodEnd,
+			Total:       tot,
+			Day:         d,
+			Night:       n,
+		})
+	}
+
+	if len(pastYears) == 0 {
+		return nil
+	}
 
 	return &ElectricityYearSummary{
 		Last12MonthsTotal: last12Total,
 		Last12MonthsDay:   last12Day,
 		Last12MonthsNight: last12Night,
 		Last12MonthsEnd:   lastDate,
+		PastYears:         pastYears,
 	}
 }
 
