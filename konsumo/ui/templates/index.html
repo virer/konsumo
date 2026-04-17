@@ -448,17 +448,21 @@
       document.getElementById("waterLatest").innerHTML = html;
     }
 
-    // Water 1-year summary: last 12 months total (m³)
+    // Water summary: up to 3 rolling 12-month periods (only with available data)
     const waterSummary = chartData.water_year_summary;
     const waterReadingCount = (chartData.entries || []).filter(e => e.category === 'water').length;
-    if (waterSummary) {
-      const lastEndStr = formatDate(waterSummary.last_12_months_end);
-      let html = '<h3>Water – 1 year summary</h3>';
-      html += `<p><strong>Last 12 months</strong> (to ${lastEndStr}): <strong>${formatNumber(waterSummary.last_12_months_total)} m³</strong></p>`;
+    if (waterSummary && Array.isArray(waterSummary.past_years) && waterSummary.past_years.length > 0) {
+      let html = '<h3>Water – consumption summary (up to 3 years)</h3>';
+      waterSummary.past_years.forEach((period, index) => {
+        const periodStartStr = formatDate(period.period_start);
+        const periodEndStr = formatDate(period.period_end);
+        const periodLabel = index === 0 ? 'Last 12 months' : `Previous ${index} year${index > 1 ? 's' : ''}`;
+        html += `<p><strong>${periodLabel}</strong> (${periodStartStr} → ${periodEndStr}): <strong>${formatNumber(period.total)} m³</strong></p>`;
+      });
       document.getElementById("waterYearSummary").innerHTML = html;
     } else if (waterReadingCount < 2) {
       document.getElementById("waterYearSummary").innerHTML =
-        '<h3>Water – 1 year summary</h3><p>Add at least two water meter readings to see total consumption over the last 12 months.</p>';
+        '<h3>Water – consumption summary (up to 3 years)</h3><p>Add at least two water meter readings to see yearly consumption.</p>';
     } else {
       document.getElementById("waterYearSummary").innerHTML = '';
     }
