@@ -36,29 +36,36 @@ type LatestDataPoint struct {
 
 // FuelHeatingProjection holds fuel consumption projection for the current heating period (Sept–June).
 type FuelHeatingProjection struct {
-	PeriodLabel           string    `json:"period_label"`             // e.g. "2025-26"
-	PeriodStart           time.Time `json:"period_start"`             // September 1
-	PeriodEnd             time.Time `json:"period_end"`                // June 30
-	ConsumedSoFar         float64   `json:"consumed_so_far"`          // L consumed in current period
-	HistoricalAvgTotal    float64   `json:"historical_avg_total"`     // average L per full heating period (past years)
-	HistoricalPeriodsUsed int      `json:"historical_periods_used"`   // number of past periods used for average
-	ProjectedTotal        float64   `json:"projected_total"`           // consumed so far + projected rest
-	RemainingMonths       float64   `json:"remaining_months"`          // months left in period (for projection)
-	HasProjection         bool      `json:"has_projection"`            // true if we have historical data to project
+	PeriodLabel           string    `json:"period_label"`            // e.g. "2025-26"
+	PeriodStart           time.Time `json:"period_start"`            // September 1
+	PeriodEnd             time.Time `json:"period_end"`              // June 30
+	ConsumedSoFar         float64   `json:"consumed_so_far"`         // L consumed in current period
+	HistoricalAvgTotal    float64   `json:"historical_avg_total"`    // average L per full heating period (past years)
+	HistoricalPeriodsUsed int       `json:"historical_periods_used"` // number of past periods used for average
+	ProjectedTotal        float64   `json:"projected_total"`         // consumed so far + projected rest
+	RemainingMonths       float64   `json:"remaining_months"`        // months left in period (for projection)
+	HasProjection         bool      `json:"has_projection"`          // true if we have historical data to project
 }
 
 // ElectricityYearSummary holds electricity last 12 months (1-year period), total and split day/night.
 type ElectricityYearSummary struct {
-	Last12MonthsTotal  float64   `json:"last_12_months_total"`  // kWh in the 12 months to last data
-	Last12MonthsDay    float64   `json:"last_12_months_day"`    // kWh day in that period
-	Last12MonthsNight  float64   `json:"last_12_months_night"`  // kWh night in that period
-	Last12MonthsEnd    time.Time `json:"last_12_months_end"`   // date of last electricity reading
+	Last12MonthsTotal float64   `json:"last_12_months_total"` // kWh in the 12 months to last data
+	Last12MonthsDay   float64   `json:"last_12_months_day"`   // kWh day in that period
+	Last12MonthsNight float64   `json:"last_12_months_night"` // kWh night in that period
+	Last12MonthsEnd   time.Time `json:"last_12_months_end"`   // date of last electricity reading
 }
 
 // WaterYearSummary holds water consumption (m³) for the last 12 months to last encoded reading.
+type WaterPeriodSummary struct {
+	PeriodStart time.Time `json:"period_start"` // inclusive start of 12-month period
+	PeriodEnd   time.Time `json:"period_end"`   // inclusive end (anchor date)
+	Total       float64   `json:"total"`        // m³ consumed in this period
+}
+
 type WaterYearSummary struct {
-	Last12MonthsTotal float64   `json:"last_12_months_total"` // m³ in the 12 months to last data
-	Last12MonthsEnd   time.Time `json:"last_12_months_end"`   // date of last water reading
+	Last12MonthsTotal float64              `json:"last_12_months_total"` // m³ in the 12 months to last data
+	Last12MonthsEnd   time.Time            `json:"last_12_months_end"`   // date of last water reading
+	PastYears         []WaterPeriodSummary `json:"past_years,omitempty"` // up to 3 rolling annual periods with data
 }
 
 // ChartData contains aggregated data for charts
@@ -107,10 +114,10 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 		LatestElectricity:      getLatestElectricity(entries),
 		LatestWater:            getLatestWater(entries),
 		LatestFuel:             getLatestFuel(entries),
-		FuelHeatingProjection:       getFuelHeatingProjection(entries, time.Now()),
+		FuelHeatingProjection:  getFuelHeatingProjection(entries, time.Now()),
 		ElectricityYearSummary: getElectricityYearSummary(entries),
 		WaterYearSummary:       getWaterYearSummary(entries),
-		LatestEntry:                 getLatestEntries(entries),
+		LatestEntry:            getLatestEntries(entries),
 		Last10Entries:          getLast10Entries(entries),
 	}
 
@@ -921,7 +928,7 @@ func getElectricityYearSummary(entries []models.ConsumptionEntry) *ElectricityYe
 
 // waterConsumptionInPeriod returns total water consumption (m³) in [start, end].
 // Each delta (curr - prev) is attributed to the period where prev.Date falls.
-func waterConsumptionInPeriod(entries []models.ConsumptionEntry, start, end time.Time) float64 {
+func waterConsumptionInPeriod(entries []models.ConsumptionEntry, start, end time.Time) (float64, bool) {
 	waterEntries := []models.ConsumptionEntry{}
 	for _, e := range entries {
 		if e.Category == "water" {
@@ -932,18 +939,20 @@ func waterConsumptionInPeriod(entries []models.ConsumptionEntry, start, end time
 		return waterEntries[i].Date.Before(waterEntries[j].Date)
 	})
 	var total float64
+	hasData := false
 	for i := 1; i < len(waterEntries); i++ {
 		prev := waterEntries[i-1]
 		curr := waterEntries[i]
-		delta := curr.Water - prev.Water
-		if delta <= 0 {
-			continue
-		}
 		if !prev.Date.Before(start) && !prev.Date.After(end) {
+			hasData = true
+			delta := curr.Water - prev.Water
+			if delta <= 0 {
+				continue
+			}
 			total += delta
 		}
 	}
-	return total
+	return total, hasData
 }
 
 // getWaterYearSummary returns last 12 months total water use (m³), same window as electricity.
@@ -961,11 +970,34 @@ func getWaterYearSummary(entries []models.ConsumptionEntry) *WaterYearSummary {
 		return waterEntries[i].Date.Before(waterEntries[j].Date)
 	})
 	lastDate := waterEntries[len(waterEntries)-1].Date
-	windowStart := lastDate.AddDate(-1, 0, 0)
-	last12Total := waterConsumptionInPeriod(entries, windowStart, lastDate)
+	pastYears := make([]WaterPeriodSummary, 0, 3)
+	var last12Total float64
+
+	for i := 0; i < 3; i++ {
+		periodEnd := lastDate.AddDate(-i, 0, 0)
+		periodStart := periodEnd.AddDate(-1, 0, 0)
+		total, hasData := waterConsumptionInPeriod(entries, periodStart, periodEnd)
+		if !hasData {
+			continue
+		}
+		if i == 0 {
+			last12Total = total
+		}
+		pastYears = append(pastYears, WaterPeriodSummary{
+			PeriodStart: periodStart,
+			PeriodEnd:   periodEnd,
+			Total:       total,
+		})
+	}
+
+	if len(pastYears) == 0 {
+		return nil
+	}
+
 	return &WaterYearSummary{
 		Last12MonthsTotal: last12Total,
 		Last12MonthsEnd:   lastDate,
+		PastYears:         pastYears,
 	}
 }
 
