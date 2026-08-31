@@ -1272,5 +1272,27 @@
     "date": "2026-07-25T00:00:00Z",
     "category": "water",
     "water": 1017
+  },
+  {
+    "date": "2026-08-05T00:00:00Z",
+    "category": "water",
+    "water": 1019
+  },
+  {
+    "date": "2026-08-05T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 19059,
+    "electricity_night": 23506
+  },
+  {
+    "date": "2026-08-17T00:00:00Z",
+    "category": "water",
+    "water": 1024
+  },
+  {
+    "date": "2026-08-17T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 19104,
+    "electricity_night": 23575
   }
 ]
