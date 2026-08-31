@@ -5,9 +5,6 @@ Konsumo is a little home energy consumption chart OpenSource project
 
 This project is based on Python, Flask, ApexCharts (apexcharts.com), SQLAlchemy, Pandas
 
-### Demo
-A demo site is available at https://konsumo.virer.net/
-
 ### Quick start
 First time, your have to create the SSL certificate, and initialize database
 
