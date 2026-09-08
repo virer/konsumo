@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	addr := flag.String("addr", ":8080", "IP address and port to listen on (e.g., :8080, 0.0.0.0:8080, localhost:3000)")
+	addr := flag.String("addr", "127.0.0.1:8080", "IP address and port to listen on (e.g., 127.0.0.1:8080, 0.0.0.0:8080, :3000)")
 	flag.Parse()
 
 	os.MkdirAll("data", os.ModePerm)
