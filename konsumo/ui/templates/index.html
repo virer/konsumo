@@ -101,11 +101,20 @@
       }
     });
   
+    function clearInputPlaceholders() {
+      document.getElementById("waterInput").placeholder = "";
+      document.getElementById("electricityDayInput").placeholder = "";
+      document.getElementById("electricityNightInput").placeholder = "";
+      document.getElementById("gasolineInput").placeholder = "";
+    }
+
     function onCategoryChange() {
       const category = document.getElementById("categorySelect").value;
       document.getElementById("waterFields").style.display = (category === "water") ? "block" : "none";
       document.getElementById("electricityFields").style.display = (category === "electricity") ? "block" : "none";
       document.getElementById("fuelFields").style.display = (category === "fuel") ? "block" : "none";
+
+      clearInputPlaceholders();
       
       // Show latest entry for selected category
       if (category && chartData.latest_entry && chartData.latest_entry[category]) {
@@ -115,18 +124,22 @@
         
         if (category === "water") {
           html += `Date: ${dateStr}, Water: ${formatNumber(latestEntry.water)} m³`;
+          document.getElementById("waterInput").placeholder = formatNumber(latestEntry.water);
           document.getElementById("waterLatestEntry").innerHTML = html;
           document.getElementById("waterLatestEntry").style.display = "block";
           document.getElementById("electricityLatestEntry").style.display = "none";
           document.getElementById("fuelLatestEntry").style.display = "none";
         } else if (category === "electricity") {
           html += `Date: ${dateStr}, Day: ${formatNumber(latestEntry.electricity_day)} kWh, Night: ${formatNumber(latestEntry.electricity_night)} kWh`;
+          document.getElementById("electricityDayInput").placeholder = formatNumber(latestEntry.electricity_day);
+          document.getElementById("electricityNightInput").placeholder = formatNumber(latestEntry.electricity_night);
           document.getElementById("electricityLatestEntry").innerHTML = html;
           document.getElementById("electricityLatestEntry").style.display = "block";
           document.getElementById("waterLatestEntry").style.display = "none";
           document.getElementById("fuelLatestEntry").style.display = "none";
         } else if (category === "fuel") {
           html += `Date: ${dateStr}, Gasoline: ${formatNumber(latestEntry.gasoline)} L`;
+          document.getElementById("gasolineInput").placeholder = formatNumber(latestEntry.gasoline);
           document.getElementById("fuelLatestEntry").innerHTML = html;
           document.getElementById("fuelLatestEntry").style.display = "block";
           document.getElementById("waterLatestEntry").style.display = "none";
@@ -173,7 +186,7 @@
     }
 
     function formatNumber(num) {
-      return num.toFixed(2);
+      return parseFloat(num.toFixed(2)).toString();
     }
     
     // Month names for labels
