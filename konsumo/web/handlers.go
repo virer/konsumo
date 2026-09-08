@@ -78,6 +78,20 @@ type WaterYearSummary struct {
 	PastYears         []WaterPeriodSummary `json:"past_years,omitempty"` // up to 3 rolling annual periods with data
 }
 
+const displayYears = 3
+
+// filterLastCalendarYears keeps only the last n calendar years (inclusive of refYear).
+func filterLastCalendarYears(data map[int][]MonthlyDataPoint, refYear int) map[int][]MonthlyDataPoint {
+	minYear := refYear - displayYears + 1
+	filtered := make(map[int][]MonthlyDataPoint)
+	for year, points := range data {
+		if year >= minYear && year <= refYear {
+			filtered[year] = points
+		}
+	}
+	return filtered
+}
+
 // ChartData contains aggregated data for charts
 type ChartData struct {
 	Entries           []models.ConsumptionEntry  `json:"entries"`
@@ -115,12 +129,13 @@ func HomeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Aggregate data by month
+	// Aggregate data by month (charts show only the last 3 calendar years)
+	refYear := time.Now().Year()
 	chartData := ChartData{
 		Entries:                entries,
-		Electricity:            aggregateElectricity(entries),
-		Water:                  aggregateWater(entries),
-		Fuel:                   aggregateFuel(entries),
+		Electricity:            filterLastCalendarYears(aggregateElectricity(entries), refYear),
+		Water:                  filterLastCalendarYears(aggregateWater(entries), refYear),
+		Fuel:                   filterLastCalendarYears(aggregateFuel(entries), refYear),
 		LatestElectricity:      getLatestElectricity(entries),
 		LatestWater:            getLatestWater(entries),
 		LatestFuel:             getLatestFuel(entries),
@@ -791,7 +806,7 @@ func getFuelHeatingProjection(entries []models.ConsumptionEntry, now time.Time) 
 
 	// Historical complete periods: only past periods that have ended (before today)
 	var historicalTotals []float64
-	for y := currentYear - 1; y >= currentYear-10; y-- {
+	for y := currentYear - 1; y >= currentYear-displayYears; y-- {
 		pe := heatingPeriodEnd(y)
 		if !pe.Before(now) {
 			continue // period not yet ended, skip

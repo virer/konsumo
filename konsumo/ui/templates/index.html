@@ -2,38 +2,8 @@
 <html>
 <head>
   <title>Konsumo Dashboard</title>
+  <link rel="stylesheet" href="/static/style.css">
   <script src="/static/chart.js"></script>
-  <style>
-    .tabs {
-      display: flex;
-      margin-bottom: 10px;
-      border-bottom: 1px solid #ccc;
-    }
-    .tab {
-      padding: 10px 20px;
-      cursor: pointer;
-      border: 1px solid #ccc;
-      border-bottom: none;
-      background-color: #f0f0f0;
-      margin-right: 5px;
-      border-radius: 5px 5px 0 0;
-    }
-    .tab.active {
-      background-color: white;
-      font-weight: bold;
-    }
-    .tab-content {
-      display: none;
-    }
-    .tab-content.active {
-      display: block;
-    }
-    canvas {
-      max-width: 85%;
-      max-height: 70vh;
-      height: auto !important;
-    }
-  </style>
 </head>
 <body>
   <h1>Konsumo - Home Consumption</h1>
@@ -50,22 +20,22 @@
   <div id="tab-electricity" class="tab-content active">
     <h2>Electricity Usage</h2>
     <canvas id="electricityChart"></canvas>
-    <div id="electricityLatest" style="margin-top: 20px; padding: 15px; background-color: #f5f5f5; border-radius: 5px;"></div>
-    <div id="electricityHeatingProjection" style="margin-top: 20px; padding: 15px; background-color: #fff8e6; border: 1px solid #e6d9b8; border-radius: 5px;"></div>
+    <div id="electricityLatest" class="panel"></div>
+    <div id="electricityHeatingProjection" class="panel panel--highlight"></div>
   </div>
   
   <div id="tab-water" class="tab-content">
     <h2>Water Usage</h2>
     <canvas id="waterChart"></canvas>
-    <div id="waterLatest" style="margin-top: 20px; padding: 15px; background-color: #f5f5f5; border-radius: 5px;"></div>
-    <div id="waterYearSummary" style="margin-top: 20px; padding: 15px; background-color: #fff8e6; border: 1px solid #e6d9b8; border-radius: 5px;"></div>
+    <div id="waterLatest" class="panel"></div>
+    <div id="waterYearSummary" class="panel panel--highlight"></div>
   </div>
   
   <div id="tab-fuel" class="tab-content">
     <h2>Fuel Usage</h2>
     <canvas id="fuelChart"></canvas>
-    <div id="fuelLatest" style="margin-top: 20px; padding: 15px; background-color: #f5f5f5; border-radius: 5px;"></div>
-    <div id="fuelHeatingProjection" style="margin-top: 20px; padding: 15px; background-color: #fff8e6; border: 1px solid #e6d9b8; border-radius: 5px;"></div>
+    <div id="fuelLatest" class="panel"></div>
+    <div id="fuelHeatingProjection" class="panel panel--highlight"></div>
   </div>
   
   <div id="tab-form" class="tab-content">
@@ -84,24 +54,24 @@
 
       <div id="waterFields" style="display: none;">
         Water (m³): <input type="number" step="0.01" name="water" id="waterInput"><br>
-        <div id="waterLatestEntry" style="margin-top: 10px; padding: 10px; background-color: #e8f4f8; border-radius: 5px; font-size: 0.9em; display: none;"></div>
+        <div id="waterLatestEntry" class="hint-box" style="display: none;"></div>
       </div>
 
       <div id="electricityFields" style="display: none;">
         Electricity Day (kWh): <input type="number" step="0.01" name="electricity_day" id="electricityDayInput"><br>
         Electricity Night (kWh): <input type="number" step="0.01" name="electricity_night" id="electricityNightInput"><br>
-        <div id="electricityLatestEntry" style="margin-top: 10px; padding: 10px; background-color: #e8f4f8; border-radius: 5px; font-size: 0.9em; display: none;"></div>
+        <div id="electricityLatestEntry" class="hint-box" style="display: none;"></div>
       </div>
 
       <div id="fuelFields" style="display: none;">
         Gasoline (L): <input type="number" step="0.01" name="gasoline" id="gasolineInput"><br>
-        <div id="fuelLatestEntry" style="margin-top: 10px; padding: 10px; background-color: #e8f4f8; border-radius: 5px; font-size: 0.9em; display: none;"></div>
+        <div id="fuelLatestEntry" class="hint-box" style="display: none;"></div>
       </div>
 
       <button type="submit">Submit</button>
     </form>
 
-    <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #ccc;">
+    <div class="form-section">
       <h3>Last 10 Recorded Values</h3>
       <div id="last10Entries" style="margin-top: 15px;"></div>
     </div>
@@ -131,11 +101,20 @@
       }
     });
   
+    function clearInputPlaceholders() {
+      document.getElementById("waterInput").placeholder = "";
+      document.getElementById("electricityDayInput").placeholder = "";
+      document.getElementById("electricityNightInput").placeholder = "";
+      document.getElementById("gasolineInput").placeholder = "";
+    }
+
     function onCategoryChange() {
       const category = document.getElementById("categorySelect").value;
       document.getElementById("waterFields").style.display = (category === "water") ? "block" : "none";
       document.getElementById("electricityFields").style.display = (category === "electricity") ? "block" : "none";
       document.getElementById("fuelFields").style.display = (category === "fuel") ? "block" : "none";
+
+      clearInputPlaceholders();
       
       // Show latest entry for selected category
       if (category && chartData.latest_entry && chartData.latest_entry[category]) {
@@ -145,18 +124,22 @@
         
         if (category === "water") {
           html += `Date: ${dateStr}, Water: ${formatNumber(latestEntry.water)} m³`;
+          document.getElementById("waterInput").placeholder = formatNumber(latestEntry.water);
           document.getElementById("waterLatestEntry").innerHTML = html;
           document.getElementById("waterLatestEntry").style.display = "block";
           document.getElementById("electricityLatestEntry").style.display = "none";
           document.getElementById("fuelLatestEntry").style.display = "none";
         } else if (category === "electricity") {
           html += `Date: ${dateStr}, Day: ${formatNumber(latestEntry.electricity_day)} kWh, Night: ${formatNumber(latestEntry.electricity_night)} kWh`;
+          document.getElementById("electricityDayInput").placeholder = formatNumber(latestEntry.electricity_day);
+          document.getElementById("electricityNightInput").placeholder = formatNumber(latestEntry.electricity_night);
           document.getElementById("electricityLatestEntry").innerHTML = html;
           document.getElementById("electricityLatestEntry").style.display = "block";
           document.getElementById("waterLatestEntry").style.display = "none";
           document.getElementById("fuelLatestEntry").style.display = "none";
         } else if (category === "fuel") {
           html += `Date: ${dateStr}, Gasoline: ${formatNumber(latestEntry.gasoline)} L`;
+          document.getElementById("gasolineInput").placeholder = formatNumber(latestEntry.gasoline);
           document.getElementById("fuelLatestEntry").innerHTML = html;
           document.getElementById("fuelLatestEntry").style.display = "block";
           document.getElementById("waterLatestEntry").style.display = "none";
@@ -203,7 +186,7 @@
     }
 
     function formatNumber(num) {
-      return num.toFixed(2);
+      return parseFloat(num.toFixed(2)).toString();
     }
     
     // Month names for labels
@@ -222,10 +205,104 @@
       "rgb(255, 99, 255)",   // pink
       "rgb(99, 255, 132)"    // green
     ];
+
+    function isDarkMode() {
+      return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    }
+
+    function getChartColors() {
+      const dark = isDarkMode();
+      const style = getComputedStyle(document.documentElement);
+      return {
+        text: style.getPropertyValue("--chart-text").trim() || (dark ? "#aaaaaa" : "#666666"),
+        grid: style.getPropertyValue("--chart-grid").trim() || (dark ? "#444444" : "#dddddd"),
+      };
+    }
+
+    function createChartOptions(yLabel) {
+      const colors = getChartColors();
+      return {
+        responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 2,
+        plugins: {
+          legend: {
+            labels: { color: colors.text },
+          },
+          tooltip: {
+            titleColor: colors.text,
+            bodyColor: colors.text,
+          },
+        },
+        scales: {
+          x: {
+            type: "linear",
+            position: "bottom",
+            title: {
+              display: true,
+              text: "Month",
+              color: colors.text,
+            },
+            min: 1,
+            max: 12,
+            ticks: {
+              stepSize: 1,
+              color: colors.text,
+              callback: function(value) {
+                const month = Math.round(value);
+                if (month >= 1 && month <= 12) {
+                  return monthNames[month - 1];
+                }
+                return "";
+              },
+            },
+            grid: { color: colors.grid },
+          },
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: yLabel,
+              color: colors.text,
+            },
+            ticks: { color: colors.text },
+            grid: { color: colors.grid },
+          },
+        },
+      };
+    }
+
+    const chartInstances = [];
+
+    function updateChartThemes() {
+      const colors = getChartColors();
+      chartInstances.forEach((chart) => {
+        if (!chart || !chart.options) return;
+        chart.options.plugins.legend.labels.color = colors.text;
+        chart.options.plugins.tooltip.titleColor = colors.text;
+        chart.options.plugins.tooltip.bodyColor = colors.text;
+        ["x", "y"].forEach((axis) => {
+          if (chart.options.scales[axis]) {
+            chart.options.scales[axis].ticks.color = colors.text;
+            chart.options.scales[axis].grid.color = colors.grid;
+            if (chart.options.scales[axis].title) {
+              chart.options.scales[axis].title.color = colors.text;
+            }
+          }
+        });
+        chart.update();
+      });
+    }
+
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", updateChartThemes);
   
     // Helper function to create chart datasets from aggregated data
     function createDatasets(dataByYear, colorIndex) {
-      const years = Object.keys(dataByYear).sort();
+      const currentYear = new Date().getFullYear();
+      const minYear = currentYear - 2;
+      const years = Object.keys(dataByYear)
+        .filter(year => year >= minYear && year <= currentYear)
+        .sort();
       return years.map((year, idx) => {
         const yearData = dataByYear[year] || [];
         return {
@@ -245,138 +322,36 @@
     // Charts: isolate failures so summary/latest panels still render (e.g. empty datasets).
     try {
       const electricityDatasets = createDatasets(chartData.electricity || {}, 0);
-      new Chart(document.getElementById("electricityChart"), {
+      const electricityChart = new Chart(document.getElementById("electricityChart"), {
         type: "line",
-        data: {
-          datasets: electricityDatasets
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: true,
-          aspectRatio: 2,
-          scales: {
-            x: {
-              type: "linear",
-              position: "bottom",
-              title: {
-                display: true,
-                text: "Month"
-              },
-              min: 1,
-              max: 12,
-              ticks: {
-                stepSize: 1,
-                callback: function(value) {
-                  const month = Math.round(value);
-                  if (month >= 1 && month <= 12) {
-                    return monthNames[month - 1];
-                  }
-                  return "";
-                }
-              }
-            },
-            y: {
-              beginAtZero: true,
-              title: {
-                display: true,
-                text: "kWh/Day"
-              }
-            }
-          }
-        }
+        data: { datasets: electricityDatasets },
+        options: createChartOptions("kWh/Day"),
       });
+      chartInstances.push(electricityChart);
     } catch (e) {
       console.error("Electricity chart failed:", e);
     }
 
     try {
       const waterDatasets = createDatasets(chartData.water || {}, 1);
-      new Chart(document.getElementById("waterChart"), {
+      const waterChart = new Chart(document.getElementById("waterChart"), {
         type: "line",
-        data: {
-          datasets: waterDatasets
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: true,
-          aspectRatio: 2,
-          scales: {
-            x: {
-              type: "linear",
-              position: "bottom",
-              title: {
-                display: true,
-                text: "Month"
-              },
-              min: 1,
-              max: 12,
-              ticks: {
-                stepSize: 1,
-                callback: function(value) {
-                  const month = Math.round(value);
-                  if (month >= 1 && month <= 12) {
-                    return monthNames[month - 1];
-                  }
-                  return "";
-                }
-              }
-            },
-            y: {
-              beginAtZero: true,
-              title: {
-                display: true,
-                text: "m³/Day"
-              }
-            }
-          }
-        }
+        data: { datasets: waterDatasets },
+        options: createChartOptions("m³/Day"),
       });
+      chartInstances.push(waterChart);
     } catch (e) {
       console.error("Water chart failed:", e);
     }
 
     try {
       const fuelDatasets = createDatasets(chartData.fuel || {}, 2);
-      new Chart(document.getElementById("fuelChart"), {
+      const fuelChart = new Chart(document.getElementById("fuelChart"), {
         type: "line",
-        data: {
-          datasets: fuelDatasets
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: true,
-          aspectRatio: 2,
-          scales: {
-            x: {
-              type: "linear",
-              position: "bottom",
-              title: {
-                display: true,
-                text: "Month"
-              },
-              min: 1,
-              max: 12,
-              ticks: {
-                stepSize: 1,
-                callback: function(value) {
-                  const month = Math.round(value);
-                  if (month >= 1 && month <= 12) {
-                    return monthNames[month - 1];
-                  }
-                  return "";
-                }
-              }
-            },
-            y: {
-              beginAtZero: true,
-              title: {
-                display: true,
-                text: "Liters/Day"
-              }
-            }
-          }
-        }
+        data: { datasets: fuelDatasets },
+        options: createChartOptions("Liters/Day"),
       });
+      chartInstances.push(fuelChart);
     } catch (e) {
       console.error("Fuel chart failed:", e);
     }
@@ -411,7 +386,7 @@
         const nightValueStr = formatNumber(point.night_value);
         const dayDailyStr = formatNumber(point.day_daily_consumption);
         const nightDailyStr = formatNumber(point.night_daily_consumption);
-        html += `<div style="margin-bottom: 10px; padding: 10px; background-color: white; border-left: 3px solid #36A2EB;">
+        html += `<div class="entry-card entry-card--electricity">
           <strong>${index + 1}. Date:</strong> ${dateStr}<br>
           <strong>Day Reading:</strong> ${dayValueStr} kWh | <strong>Daily:</strong> ${dayDailyStr} kWh/day<br>
           <strong>Night Reading:</strong> ${nightValueStr} kWh | <strong>Daily:</strong> ${nightDailyStr} kWh/day
@@ -430,7 +405,7 @@
         const periodEndStr = formatDate(period.period_end);
         const periodLabel = index === 0 ? 'Last 12 months' : `Previous ${index} year${index > 1 ? 's' : ''}`;
         html += `<p><strong>${periodLabel}</strong> (${periodStartStr} → ${periodEndStr}): <strong>${formatNumber(period.total)} kWh</strong></p>`;
-        html += `<p style="margin-top: 4px; padding-left: 12px;">Day: ${formatNumber(period.day)} kWh &nbsp;|&nbsp; Night: ${formatNumber(period.night)} kWh</p>`;
+        html += `<p class="text-indent">Day: ${formatNumber(period.day)} kWh &nbsp;|&nbsp; Night: ${formatNumber(period.night)} kWh</p>`;
       });
       document.getElementById("electricityHeatingProjection").innerHTML = html;
     } else if (elecReadingCount < 2) {
@@ -447,7 +422,7 @@
         const dateStr = formatDate(point.date);
         const valueStr = formatNumber(point.value);
         const dailyStr = formatNumber(point.daily_consumption);
-        html += `<div style="margin-bottom: 10px; padding: 10px; background-color: white; border-left: 3px solid #4BC0C0;">
+        html += `<div class="entry-card entry-card--water">
           <strong>${index + 1}. Date:</strong> ${dateStr}<br>
           <strong>Reading:</strong> ${valueStr} m³<br>
           <strong>Daily Consumption:</strong> ${dailyStr} m³/day
@@ -482,7 +457,7 @@
         const dateStr = formatDate(point.date);
         const valueStr = formatNumber(point.value);
         const dailyStr = formatNumber(point.daily_consumption);
-        html += `<div style="margin-bottom: 10px; padding: 10px; background-color: white; border-left: 3px solid #FFCE56;">
+        html += `<div class="entry-card entry-card--fuel">
           <strong>${index + 1}. Date:</strong> ${dateStr}<br>
           <strong>Reading:</strong> ${valueStr} L<br>
           <strong>Daily Consumption:</strong> ${dailyStr} L/day
@@ -497,36 +472,40 @@
       const container = document.getElementById("last10Entries");
       
       if (entries.length === 0) {
-        container.innerHTML = '<p style="color: #666; font-style: italic;">No entries recorded yet.</p>';
+        container.innerHTML = '<p class="text-muted">No entries recorded yet.</p>';
         return;
       }
 
-      let html = '<div style="display: flex; flex-direction: column; gap: 10px;">';
+      let html = '<div class="entry-list">';
       entries.forEach((entry, index) => {
         const dateStr = formatDate(entry.date);
         let categoryColor = '#999';
+        let categoryClass = '';
         let categoryLabel = entry.category.charAt(0).toUpperCase() + entry.category.slice(1);
         let details = '';
         
         if (entry.category === 'water') {
           categoryColor = '#36A2EB';
+          categoryClass = 'entry-card--water';
           details = `Water: ${formatNumber(entry.water)} m³`;
         } else if (entry.category === 'electricity') {
           categoryColor = '#FFCE56';
+          categoryClass = 'entry-card--electricity';
           details = `Day: ${formatNumber(entry.electricity_day)} kWh, Night: ${formatNumber(entry.electricity_night)} kWh`;
         } else if (entry.category === 'fuel') {
           categoryColor = '#E74C3C';
+          categoryClass = 'entry-card--fuel';
           details = `Gasoline: ${formatNumber(entry.gasoline)} L`;
         }
 
-        html += `<div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; background-color: white; border-left: 4px solid ${categoryColor}; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+        html += `<div class="entry-list-item ${categoryClass}" style="border-left-color: ${categoryColor};">
           <div style="flex: 1;">
-            <strong style="color: ${categoryColor};">${categoryLabel}</strong> - ${dateStr}<br>
-            <span style="color: #666; font-size: 0.9em;">${details}</span>
+            <strong class="entry-list-item__category" style="color: ${categoryColor};">${categoryLabel}</strong> - ${dateStr}<br>
+            <span class="entry-list-item__details">${details}</span>
           </div>
           <form method="POST" action="/delete" style="margin: 0; display: inline-block;" onsubmit="return confirm('Are you sure you want to delete this entry?');">
             <input type="hidden" name="index" value="${index}">
-            <button type="submit" style="background-color: #ff4444; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.9em;">Delete</button>
+            <button type="submit" class="btn-delete">Delete</button>
           </form>
         </div>`;
       });
