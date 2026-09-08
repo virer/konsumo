@@ -51,6 +51,30 @@ func TestParseFloat(t *testing.T) {
 	}
 }
 
+func TestFilterLastCalendarYears(t *testing.T) {
+	data := map[int][]MonthlyDataPoint{
+		2020: {{Year: 2020, Month: 1, Day: 1, Rate: 1}},
+		2023: {{Year: 2023, Month: 1, Day: 1, Rate: 2}},
+		2024: {{Year: 2024, Month: 1, Day: 1, Rate: 3}},
+		2025: {{Year: 2025, Month: 1, Day: 1, Rate: 4}},
+		2026: {{Year: 2026, Month: 1, Day: 1, Rate: 5}},
+	}
+	filtered := filterLastCalendarYears(data, 2026)
+	if len(filtered) != 3 {
+		t.Fatalf("expected 3 years, got %d", len(filtered))
+	}
+	for _, year := range []int{2024, 2025, 2026} {
+		if _, ok := filtered[year]; !ok {
+			t.Errorf("expected year %d to be kept", year)
+		}
+	}
+	for _, year := range []int{2020, 2023} {
+		if _, ok := filtered[year]; ok {
+			t.Errorf("expected year %d to be filtered out", year)
+		}
+	}
+}
+
 func TestGetHeatingYear(t *testing.T) {
 	tests := []struct {
 		date time.Time

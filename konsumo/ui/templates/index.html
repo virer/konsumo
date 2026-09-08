@@ -285,7 +285,11 @@
   
     // Helper function to create chart datasets from aggregated data
     function createDatasets(dataByYear, colorIndex) {
-      const years = Object.keys(dataByYear).sort();
+      const currentYear = new Date().getFullYear();
+      const minYear = currentYear - 2;
+      const years = Object.keys(dataByYear)
+        .filter(year => year >= minYear && year <= currentYear)
+        .sort();
       return years.map((year, idx) => {
         const yearData = dataByYear[year] || [];
         return {
