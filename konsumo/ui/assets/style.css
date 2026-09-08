@@ -13,7 +13,9 @@
   --btn-delete-bg: #ff4444;
   --btn-delete-text: #ffffff;
   --tab-bg: #f0f0f0;
-  --tab-active-bg: #ffffff;
+  --tab-active-bg: #f5faff;
+  --tab-active-border: rgba(54, 162, 235, 0.45);
+  --tab-active-glow: rgba(54, 162, 235, 0.22);
   --chart-text: #666666;
   --chart-grid: #dddddd;
 }
@@ -33,7 +35,9 @@
     --btn-delete-bg: #cc3333;
     --btn-delete-text: #ffffff;
     --tab-bg: #333333;
-    --tab-active-bg: #2d2d2d;
+    --tab-active-bg: #2a3340;
+    --tab-active-border: rgba(54, 162, 235, 0.5);
+    --tab-active-glow: rgba(54, 162, 235, 0.28);
     --chart-text: #aaaaaa;
     --chart-grid: #444444;
   }
@@ -72,8 +76,15 @@ h1, h2, h3 {
 }
 
 .tab.active {
+  position: relative;
+  z-index: 1;
   background-color: var(--tab-active-bg);
+  border-color: var(--tab-active-border);
   font-weight: bold;
+  box-shadow:
+    0 0 10px var(--tab-active-glow),
+    0 -2px 8px var(--tab-active-glow),
+    inset 0 1px 0 rgba(54, 162, 235, 0.12);
 }
 
 .tab-content {
