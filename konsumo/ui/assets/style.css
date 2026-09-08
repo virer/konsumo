@@ -1,0 +1,203 @@
+:root {
+  color-scheme: light dark;
+  --bg-page: #ffffff;
+  --bg-panel: #f5f5f5;
+  --bg-highlight: #fff8e6;
+  --bg-card: #ffffff;
+  --bg-hint: #e8f4f8;
+  --border: #ccc;
+  --border-highlight: #e6d9b8;
+  --text: #222222;
+  --text-muted: #666666;
+  --shadow: rgba(0, 0, 0, 0.1);
+  --btn-delete-bg: #ff4444;
+  --btn-delete-text: #ffffff;
+  --tab-bg: #f0f0f0;
+  --tab-active-bg: #ffffff;
+  --chart-text: #666666;
+  --chart-grid: #dddddd;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-page: #1a1a1a;
+    --bg-panel: #2d2d2d;
+    --bg-highlight: #3d3520;
+    --bg-card: #2d2d2d;
+    --bg-hint: #1e3a44;
+    --border: #555555;
+    --border-highlight: #6b5a3a;
+    --text: #e0e0e0;
+    --text-muted: #aaaaaa;
+    --shadow: rgba(0, 0, 0, 0.3);
+    --btn-delete-bg: #cc3333;
+    --btn-delete-text: #ffffff;
+    --tab-bg: #333333;
+    --tab-active-bg: #2d2d2d;
+    --chart-text: #aaaaaa;
+    --chart-grid: #444444;
+  }
+}
+
+html {
+  color-scheme: light dark;
+}
+
+body {
+  background-color: var(--bg-page);
+  color: var(--text);
+  font-family: system-ui, -apple-system, sans-serif;
+  margin: 20px;
+}
+
+h1, h2, h3 {
+  color: var(--text);
+}
+
+.tabs {
+  display: flex;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab {
+  padding: 10px 20px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  background-color: var(--tab-bg);
+  color: var(--text);
+  margin-right: 5px;
+  border-radius: 5px 5px 0 0;
+}
+
+.tab.active {
+  background-color: var(--tab-active-bg);
+  font-weight: bold;
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+canvas {
+  max-width: 85%;
+  max-height: 70vh;
+  height: auto !important;
+}
+
+.panel {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: var(--bg-panel);
+  border-radius: 5px;
+}
+
+.panel--highlight {
+  background-color: var(--bg-highlight);
+  border: 1px solid var(--border-highlight);
+}
+
+.hint-box {
+  margin-top: 10px;
+  padding: 10px;
+  background-color: var(--bg-hint);
+  border-radius: 5px;
+  font-size: 0.9em;
+}
+
+.form-section {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 2px solid var(--border);
+}
+
+.entry-card {
+  margin-bottom: 10px;
+  padding: 10px;
+  background-color: var(--bg-card);
+  border-radius: 4px;
+}
+
+.entry-card--electricity {
+  border-left: 3px solid #36A2EB;
+}
+
+.entry-card--water {
+  border-left: 3px solid #4BC0C0;
+}
+
+.entry-card--fuel {
+  border-left: 3px solid #FFCE56;
+}
+
+.entry-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.entry-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background-color: var(--bg-card);
+  border-left: 4px solid var(--border);
+  border-radius: 4px;
+  box-shadow: 0 1px 3px var(--shadow);
+}
+
+.entry-list-item__category {
+  font-weight: bold;
+}
+
+.entry-list-item__details {
+  color: var(--text-muted);
+  font-size: 0.9em;
+}
+
+.text-muted {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.text-indent {
+  margin-top: 4px;
+  padding-left: 12px;
+}
+
+.btn-delete {
+  background-color: var(--btn-delete-bg);
+  color: var(--btn-delete-text);
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+}
+
+.btn-delete:hover {
+  opacity: 0.9;
+}
+
+form label {
+  color: var(--text);
+}
+
+input, select, button[type="submit"] {
+  color: var(--text);
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 4px 8px;
+}
+
+button[type="submit"] {
+  cursor: pointer;
+  margin-top: 8px;
+}

@@ -8,10 +8,30 @@ import (
 	"github.com/virer/konsumo/models"
 )
 
-var filePath = "data/consumption.json"
+type Store struct {
+	FilePath string
+}
+
+func DefaultStore() *Store {
+	return &Store{FilePath: "data/consumption.json"}
+}
+
+var defaultStore = DefaultStore()
+
+func SetStore(s *Store) {
+	defaultStore = s
+}
 
 func LoadData() ([]models.ConsumptionEntry, error) {
-	file, err := os.ReadFile(filePath)
+	return defaultStore.LoadData()
+}
+
+func SaveData(entries []models.ConsumptionEntry) error {
+	return defaultStore.SaveData(entries)
+}
+
+func (s *Store) LoadData() ([]models.ConsumptionEntry, error) {
+	file, err := os.ReadFile(s.FilePath)
 	if err != nil {
 		return []models.ConsumptionEntry{}, nil // start empty
 	}
@@ -20,10 +40,10 @@ func LoadData() ([]models.ConsumptionEntry, error) {
 	return entries, err
 }
 
-func SaveData(entries []models.ConsumptionEntry) error {
+func (s *Store) SaveData(entries []models.ConsumptionEntry) error {
 	data, err := json.MarshalIndent(entries, "", "  ")
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(filePath, data, 0644)
+	return os.WriteFile(s.FilePath, data, 0644)
 }
