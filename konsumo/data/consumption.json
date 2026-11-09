@@ -1305,5 +1305,75 @@
     "date": "2026-09-01T00:00:00Z",
     "category": "water",
     "water": 1029
+  },
+  {
+    "date": "2026-09-16T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 19241,
+    "electricity_night": 23741
+  },
+  {
+    "date": "2026-09-16T00:00:00Z",
+    "category": "water",
+    "water": 1034
+  },
+  {
+    "date": "2026-10-01T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 19306,
+    "electricity_night": 23827
+  },
+  {
+    "date": "2026-10-01T00:00:00Z",
+    "category": "water",
+    "water": 1040
+  },
+  {
+    "date": "2026-10-11T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1620
+  },
+  {
+    "date": "2026-10-11T00:00:00Z",
+    "category": "water",
+    "water": 1044
+  },
+  {
+    "date": "2026-10-11T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 19345,
+    "electricity_night": 23885
+  },
+  {
+    "date": "2026-10-21T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 19394,
+    "electricity_night": 23953
+  },
+  {
+    "date": "2026-10-21T00:00:00Z",
+    "category": "water",
+    "water": 1047
+  },
+  {
+    "date": "2026-10-21T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1585
+  },
+  {
+    "date": "2026-11-01T00:00:00Z",
+    "category": "fuel",
+    "gasoline": 1540
+  },
+  {
+    "date": "2026-11-01T00:00:00Z",
+    "category": "water",
+    "water": 1051
+  },
+  {
+    "date": "2026-11-01T00:00:00Z",
+    "category": "electricity",
+    "electricity_day": 19445,
+    "electricity_night": 24031
   }
 ]
